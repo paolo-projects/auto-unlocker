@@ -6,6 +6,10 @@
 #include <archive.h>
 #include <archive_entry.h>
 
+#ifdef __linux__
+#include <cstring>
+#endif
+
 #include "debugutils.h"
 
 int copy_data(struct archive* ar, struct archive* aw);

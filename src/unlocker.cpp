@@ -164,8 +164,8 @@ void doPatch()
 		CHECKRES(Patcher::patchSMC(vmx_stats, vmxso));
 	}
 
-	logd("File: " + vmwarebase.filename().string());
-	CHECKRES(Patcher::patchBase(vmwarebase));
+	logd("File: " + vmlib.filename().string());
+	CHECKRES(Patcher::patchBase(vmlib));
 #else
 	logerr("OS not supported");
 	exit(1);

@@ -6,7 +6,7 @@
 #include <winbase.h>
 #endif
 
-void __stdcall ServiceStopper::StopService_s(std::string serviceName)
+void ServiceStopper::StopService_s(std::string serviceName)
 {
 #ifdef _WIN32
 	SERVICE_STATUS_PROCESS ssp;
@@ -153,7 +153,7 @@ stop_cleanup:
 #endif
 }
 
-bool __stdcall ServiceStopper::StopDependantServices(SC_HANDLE schService, SC_HANDLE schSCManager)
+bool ServiceStopper::StopDependantServices(SC_HANDLE schService, SC_HANDLE schSCManager)
 {
 #ifdef _WIN32
 	DWORD i;
@@ -251,7 +251,7 @@ bool __stdcall ServiceStopper::StopDependantServices(SC_HANDLE schService, SC_HA
 #endif
 }
 
-bool __stdcall ServiceStopper::StartService_s(std::string serviceName)
+bool ServiceStopper::StartService_s(std::string serviceName)
 {
 #ifdef _WIN32
 	SERVICE_STATUS_PROCESS ssStatus;
