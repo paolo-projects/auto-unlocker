@@ -1,14 +1,7 @@
 cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
 project (Unlocker)
 
-#set (BUILD_CURL_EXE OFF)
-#set (BUILD_TESTING OFF)
-#set (BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared lib")
-SET(BUILD_SHARED_LIBS OFF)
-
-set(CMAKE_VERBOSE_MAKEFILE ON)
-
-set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};/usr/local/lib;/usr/local/include;/usr/lib;/usr/include")
+SET(UNLOCKER_STATIC_LIBS_WIN OFF CACHE BOOL "Links statically")
 
 IF (MSVC)
 	# prevent default manifest from being linked
@@ -16,18 +9,6 @@ IF (MSVC)
 	set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /MANIFEST:NO")
 	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /MANIFEST:NO")
 ENDIF(MSVC)
-
-# include libcurl headers and cmake-project
-#include_directories ("${PROJECT_SOURCE_DIR}/curl-7.66.0/include")
-#add_subdirectory ( "${PROJECT_SOURCE_DIR}/curl-7.66.0" )
-
-#find_package(ZLIB REQUIRED)
-
-#if(ZLIB_FOUND)
-#	message (STATUS "ZLIB found, version ${ZLIB_VERSION_STRING}")
-#endif()
-
-#include_directories (${ZLIB_INCLUDE_DIRS})
 
 find_package(CURL REQUIRED)
 
@@ -45,12 +26,6 @@ endif()
 
 include_directories(${LibArchive_INCLUDE_DIRS})
 
-# include zlib
-#include_directories ("${PROJECT_SOURCE_DIR}/libarchive-3.4.0/zlib-1.2.11")
-
-# include libarchive headears
-#include_directories ("${PROJECT_SOURCE_DIR}/libarchive-3.4.0/libarchive")
-
 # main include files
 include_directories ("${PROJECT_SOURCE_DIR}/include")
 
@@ -64,13 +39,12 @@ set (SOURCE_FILES src/unlocker.cpp /
 				src/installinfoutils.cpp /
 				src/servicestoputils.cpp /
 				src/patchutils.cpp /
-				src/circularbuffer.cpp /
 				)
 
 # if msvc then include manifest for admin privileges
 IF (MSVC)
 	set (SOURCE_FILES ${SOURCE_FILES} Unlocker.exe.manifest)
-	IF (NOT BUILD_SHARED_LIBS)
+	IF (UNLOCKER_STATIC_LIBS_WIN)
 		add_compile_definitions( "CURL_STATICLIB" "LIBARCHIVE_STATIC")
 	ENDIF()
 ENDIF (MSVC)
@@ -79,16 +53,10 @@ add_executable(Unlocker ${SOURCE_FILES})
 set_target_properties(Unlocker PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS ON)
 set_target_properties (Unlocker PROPERTIES COMPILE_DEFINITIONS BUILDER_STATIC_DEFINE)
 
-#target_link_libraries (Unlocker "${ZLIB_LIBRARIES}" -static)
-target_link_libraries (Unlocker "${CURL_LIBRARIES}" -static)
-target_link_libraries (Unlocker "${LibArchive_LIBRARIES}" -static)
+target_link_libraries (Unlocker "${CURL_LIBRARIES}")
+target_link_libraries (Unlocker "${LibArchive_LIBRARIES}")
 
 if(MSVC)
 	target_link_libraries (Unlocker "ws2_32.lib" "Wldap32.lib")
 endif()
 
-#link_directories (${PROJECT_SOURCE_DIR}/libarchive.build/libarchive/Release)
-
-#target_link_libraries (Unlocker libcurl )
-#target_link_libraries (Unlocker ${PROJECT_SOURCE_DIR}/libarchive-3.4.0/zlib-1.2.11/build/Release/zlibstatic.lib)
-#target_link_libraries (Unlocker ${PROJECT_SOURCE_DIR}/libarchive.build/libarchive/Release/archive_static.lib)

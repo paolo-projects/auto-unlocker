@@ -9,7 +9,6 @@
 
 #include "debugutils.h"
 #include "config.h"
-#include "circularbuffer.h"
 
 namespace fs = std::filesystem;
 

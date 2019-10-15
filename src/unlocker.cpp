@@ -39,9 +39,11 @@
 
 #ifdef __linux__
 #include <unistd.h>
+#include <stdio.h>
 #endif
 
 #define CHECKRES(x) if(!(x)) logerr("Couldn't patch file.")
+#define KILL(x) (x); exit(1);
 
 namespace fs = std::filesystem;
 
@@ -61,8 +63,8 @@ int main(int argc, const char* argv[])
 		// User not root and not elevated permissions
 		logd("The program is not running as root, the patch may not work properly.");
 		std::cout << "Running the program with sudo is suggested... Do you want to continue? (y/N) ";
-		char c;
-		std::cin >> c;
+		char c = getc(stdin);
+		
 		if (c != 'y' && c != 'Y')
 		{
 			logd("Aborting...");
@@ -117,6 +119,19 @@ void doPatch()
 	fs::path vmx_stats = vmx_path / binList[2];
 	fs::path vmwarebase = vmwarebase_path / binList[3];
 
+	if(!fs::exists(vmx))
+	{
+		KILL(logerr("Vmx file not found"));
+	}
+	if(!fs::exists(vmx_debug))
+	{
+		KILL(logerr("Vmx file not found"));
+	}
+	if(!fs::exists(vmwarebase))
+	{
+		KILL(logerr("Vmx file not found"));
+	}
+
 	logd("File: " + vmx.filename().string());
 	CHECKRES(Patcher::patchSMC(vmx, false));
 
@@ -150,6 +165,19 @@ void doPatch()
 	if (!fs::exists(vmlib)) {
 		vmlib = libCandidates[1];
 		vmxso = false;
+	}
+
+        if(!fs::exists(vmx))
+	{
+		KILL(logerr("Vmx file not found"));
+	}
+        if(!fs::exists(vmx_debug))
+	{
+		KILL(logerr("Vmx-debug file not found"));
+	}
+	if(!fs::exists(vmlib))
+	{
+		KILL(logerr("Vmlib file not found"));
 	}
 
 	logd("File: " + vmx.filename().string());

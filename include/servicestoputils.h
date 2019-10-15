@@ -20,9 +20,9 @@ public:
 			char formatted[512];
 			va_list args;
 			va_start(args, msg);
-			sprintf_s(formatted, msg, args);
+			sprintf(formatted, msg, args);
 			va_end(args);
-			sprintf_s(message, "Error: %s", formatted); 
+			sprintf(message, "Error: %s", formatted); 
 		}
 		const char* what() const noexcept { return message; }
 	private:
@@ -31,10 +31,10 @@ public:
 
 	// TODO: check if linux needs these functions and if so reimplement them
 	//		 or alternatively wrap them in ifdef if it doesn't need them
-	static void __stdcall StopService_s(std::string serviceName);
-	static bool __stdcall StopDependantServices(SC_HANDLE schService, SC_HANDLE schSCManager);
+	static void StopService_s(std::string serviceName);
+	static bool StopDependantServices(SC_HANDLE schService, SC_HANDLE schSCManager);
 
-	static bool __stdcall StartService_s(std::string serviceName);
+	static bool StartService_s(std::string serviceName);
 
 	static bool KillProcess(std::string procName);
 };
