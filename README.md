@@ -25,7 +25,7 @@ I created the C++ version of this tool to avoid issues between different Python 
 
 **Windows:** just download from the *releases* section and run the executable. The program should take care of everything by itself.
 
-**Linux:** you need to compile the program first.
+**Linux:** you need to compile the program first. After you compiled it, ```chmod +x``` if needed and run ```sudo auto-unlocker```.
 
 ## Compile
 The program can be compiled with CMake. Run CMake on the source dir and it will generate a ready to build project.
@@ -38,7 +38,7 @@ The program needs the following libraries:
 
 
 **Windows:** 
-Run *CMake* on the source folder to generate a Visual Studio Project. The CMakeList is set up to compile with static libraries, if you have shared ones change it accordingly. Point the script to the proper library/headers folders when prompted.
+Run *CMake* on the source folder to generate a Visual Studio Project. The CMakeList is set up to compile with static libraries, if you have shared ones change *CMakeLists.txt* file accordingly. Point the script to the proper library/headers paths when prompted.
 
 **Linux:**
-Same procedure. Run *CMake* to generate a makefile, then run *make* to compile.
+Use the embedded Makefile. Get needed libraries (or compile them) first, then run ```make```
