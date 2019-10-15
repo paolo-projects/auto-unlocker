@@ -10,6 +10,14 @@ IF (MSVC)
 	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /MANIFEST:NO")
 ENDIF(MSVC)
 
+find_package(ZLIB REQUIRED)
+
+if(ZLIB_FOUND)
+	message (STATUS "ZLib found, version ${ZLIB_VERSION_STRING}")
+endif()
+
+include_directories(${ZLIB_INCLUDE_DIRS})
+
 find_package(CURL REQUIRED)
 
 if(CURL_FOUND)
@@ -53,6 +61,7 @@ add_executable(Unlocker ${SOURCE_FILES})
 set_target_properties(Unlocker PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS ON)
 set_target_properties (Unlocker PROPERTIES COMPILE_DEFINITIONS BUILDER_STATIC_DEFINE)
 
+target_link_libraries (Unlocker "${ZLIB_LIBRARIES}")
 target_link_libraries (Unlocker "${CURL_LIBRARIES}")
 target_link_libraries (Unlocker "${LibArchive_LIBRARIES}")
 
