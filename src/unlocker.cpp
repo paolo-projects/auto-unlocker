@@ -37,6 +37,10 @@
 #include "servicestoputils.h"
 #include "patchutils.h"
 
+#ifdef __linux__
+#include <unistd.h>
+#endif
+
 #define CHECKRES(x) if(!(x)) logerr("Couldn't patch file.")
 
 namespace fs = std::filesystem;
@@ -49,8 +53,23 @@ void downloadTools(std::string path);
 
 // Main function
 
-int main (int argc, const char* argv[])
+int main(int argc, const char* argv[])
 {
+#ifdef __linux__
+	if (geteuid() != 0)
+	{
+		// User not root and not elevated permissions
+		logd("The program is not running as root, the patch may not work properly.");
+		std::cout << "Running the program with sudo is suggested... Do you want to continue? (y/N) ";
+		char c;
+		std::cin >> c;
+		if (c != 'y' && c != 'Y')
+		{
+			logd("Aborting...");
+			exit(0);
+		}
+	}
+#endif
 	// Default output path is ./tools/
 	std::string directory = (fs::path(".") / "tools" / "").string();
 	// Default backup path is ./backup/
