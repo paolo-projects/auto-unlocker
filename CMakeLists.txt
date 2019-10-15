@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
 project (Unlocker)
 
-SET(UNLOCKER_STATIC_LIBS_WIN OFF CACHE BOOL "Links statically")
+SET(UNLOCKER_STATIC_LIBS_WIN ON CACHE BOOL "Links statically") # Set to OFF for dynamic linking
 
 IF (MSVC)
 	# prevent default manifest from being linked
@@ -49,15 +49,14 @@ set (SOURCE_FILES src/unlocker.cpp /
 				src/patchutils.cpp /
 				)
 
-# if msvc then include manifest for admin privileges
 IF (MSVC)
-	set (SOURCE_FILES ${SOURCE_FILES} Unlocker.exe.manifest)
 	IF (UNLOCKER_STATIC_LIBS_WIN)
 		add_compile_definitions( "CURL_STATICLIB" "LIBARCHIVE_STATIC")
 	ENDIF()
 ENDIF (MSVC)
 
 add_executable(Unlocker ${SOURCE_FILES})
+
 set_target_properties(Unlocker PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS ON)
 set_target_properties (Unlocker PROPERTIES COMPILE_DEFINITIONS BUILDER_STATIC_DEFINE)
 
@@ -68,4 +67,18 @@ target_link_libraries (Unlocker "${LibArchive_LIBRARIES}")
 if(MSVC)
 	target_link_libraries (Unlocker "ws2_32.lib" "Wldap32.lib")
 endif()
+
+# Amend manifest to tell Windows that the app needs admin privileges
+IF (MSVC)
+	IF (CMAKE_MAJOR_VERSION LESS 3)
+		MESSAGE(WARNING "CMake version 3.0 or newer is required use build variable TARGET_FILE")
+	ELSE()
+		ADD_CUSTOM_COMMAND(
+			TARGET Unlocker
+			POST_BUILD
+			COMMAND "mt.exe" -manifest \"${PROJECT_SOURCE_DIR}/Unlocker.exe.manifest\" -outputresource:\"$<TARGET_FILE:Unlocker>\"\;\#1
+			COMMENT "Embedding manifest..." 
+		)
+	ENDIF()
+ENDIF(MSVC)
 
