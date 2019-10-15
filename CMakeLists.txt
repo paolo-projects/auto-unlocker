@@ -4,11 +4,11 @@ project (Unlocker)
 #set (BUILD_CURL_EXE OFF)
 #set (BUILD_TESTING OFF)
 #set (BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared lib")
-SET(CMAKE_FIND_LIBRARY_SUFFIXES ".lib")
 SET(BUILD_SHARED_LIBS OFF)
-SET(CMAKE_EXE_LINKER_FLAGS "-static")
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
+
+set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};/usr/local/lib;/usr/local/include;/usr/lib;/usr/include")
 
 IF (MSVC)
 	# prevent default manifest from being linked
@@ -21,13 +21,13 @@ ENDIF(MSVC)
 #include_directories ("${PROJECT_SOURCE_DIR}/curl-7.66.0/include")
 #add_subdirectory ( "${PROJECT_SOURCE_DIR}/curl-7.66.0" )
 
-find_package(ZLIB REQUIRED)
+#find_package(ZLIB REQUIRED)
 
-if(ZLIB_FOUND)
-	message (STATUS "ZLIB found, version ${ZLIB_VERSION_STRING}")
-endif()
+#if(ZLIB_FOUND)
+#	message (STATUS "ZLIB found, version ${ZLIB_VERSION_STRING}")
+#endif()
 
-include_directories (${ZLIB_INCLUDE_DIRS})
+#include_directories (${ZLIB_INCLUDE_DIRS})
 
 find_package(CURL REQUIRED)
 
@@ -70,14 +70,16 @@ set (SOURCE_FILES src/unlocker.cpp /
 # if msvc then include manifest for admin privileges
 IF (MSVC)
 	set (SOURCE_FILES ${SOURCE_FILES} Unlocker.exe.manifest)
-	add_compile_definitions( "CURL_STATICLIB" "LIBARCHIVE_STATIC")
+	IF (NOT BUILD_SHARED_LIBS)
+		add_compile_definitions( "CURL_STATICLIB" "LIBARCHIVE_STATIC")
+	ENDIF()
 ENDIF (MSVC)
 
 add_executable(Unlocker ${SOURCE_FILES})
-set_target_properties(Unlocker PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
+set_target_properties(Unlocker PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS ON)
 set_target_properties (Unlocker PROPERTIES COMPILE_DEFINITIONS BUILDER_STATIC_DEFINE)
 
-target_link_libraries (Unlocker "${ZLIB_LIBRARIES}" -static)
+#target_link_libraries (Unlocker "${ZLIB_LIBRARIES}" -static)
 target_link_libraries (Unlocker "${CURL_LIBRARIES}" -static)
 target_link_libraries (Unlocker "${LibArchive_LIBRARIES}" -static)
 
