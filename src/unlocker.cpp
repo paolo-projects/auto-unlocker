@@ -40,6 +40,9 @@
 #ifdef __linux__
 #include <unistd.h>
 #include <stdio.h>
+#include <strings.h>
+
+#define stricmp(a, b) strcasecmp(a, b)
 #endif
 
 #define CHECKRES(x) if(!(x)) logerr("Couldn't patch file.")
