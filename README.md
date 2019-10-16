@@ -29,9 +29,9 @@ I created the C++ version of this tool to avoid issues between different Python 
 
 **Command line options:**
 
-* **--install** *(Default behavior when called with no arguments)* Installs the patch.
-* **--uninstall** Uninstalls the patch. Works only if the patch was previously installed and the *backup* folder is intact
-* **--help** Shows a list of the available options
+* ```--install``` *(Default behavior when called with no arguments)* Installs the patch.
+* ```--uninstall``` Uninstalls the patch. Works only if the patch was previously installed and the *backup* folder is intact
+* ```--help``` Shows a list of the available options
 
 ## Compile
 The program can be compiled with CMake. Run CMake on the source dir and it will generate a ready to build project.
