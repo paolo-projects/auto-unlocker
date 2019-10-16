@@ -654,7 +654,7 @@ void downloadTools(std::string path)
 					
 					fs::path temppath = fs::temp_directory_path();
 
-					success = extract_s(temppath/FUSION_DEF_CORE_NAME, temppath.string(), temppath/FUSION_DEF_CORE_NAME_ZIP);
+					success = extract_s(temppath/FUSION_DEF_CORE_NAME, FUSION_DEF_CORE_NAME_ZIP, temppath/FUSION_DEF_CORE_NAME_ZIP);
 					if (!success) {
 						logerr("Couldn't extract from the tar file");
 						// Error in the tar file, try the next version number
