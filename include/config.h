@@ -74,11 +74,6 @@
 	"/usr/lib/vmware/bin/vmware-vmx-stats", \
 	}
 
-#define VM_LNX_BACKUP_LIB_ALTERNATIVES { \
-	"/usr/lib/vmware/lib/libvmwarebase.so.0/libvmwarebase.so.0" \
-	"/usr/lib/vmware/lib/libvmwarebase.so/libvmwarebase.so" \
-}
-
 // Files to patch (have to keep the same order)
 #define VM_WIN_PATCH_FILES { \
 	"vmware-vmx.exe", \
@@ -95,7 +90,7 @@
 	"vmware-vmx-stats", \
 	}
 #define VM_LNX_LIB_CANDIDATES { \
-	"/usr/lib/vmware/lib/libvmwarebase.so/libvmwarebase.so" \
+	"/usr/lib/vmware/lib/libvmwarebase.so/libvmwarebase.so", \
 	"/usr/lib/vmware/lib/libvmwarebase.so.0/libvmwarebase.so.0" \
 	}
 #define VM_LNX_ISO_DESTPATH "/usr/lib/vmware/isoimages"

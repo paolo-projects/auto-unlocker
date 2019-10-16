@@ -536,7 +536,7 @@ void preparePatch(fs::path backupPath)
 		}
 	}
 
-	std::string libsAlternatives[] = VM_LNX_BACKUP_LIB_ALTERNATIVES;
+	std::string libsAlternatives[] = VM_LNX_LIB_CANDIDATES;
 
 	for (auto lib : libsAlternatives)
 	{
