@@ -6,6 +6,18 @@
 	Grouped here to make it easy to fix something if they change some url or file names
 */
 
+// Program options
+// Install - Default option
+#define INSTALL_OPTION "--install" 
+// Uninstall
+#define UNINSTALL_OPTION "--uninstall"
+// Show help message
+#define HELP_OPTION "--help"
+
+// Paths
+#define TOOLS_DOWNLOAD_FOLDER "tools"
+#define BACKUP_FOLDER "backup"
+
 // Base URL to parse for the tools
 #define FUSION_BASE_URL "http://softwareupdate.vmware.com/cds/vmw-desktop/fusion/"
 
@@ -55,6 +67,18 @@
 	{"vmwarebase.dll", ""} \
 	}
 
+// Files to backup (linux) { source, destination }
+#define VM_LNX_BACKUP_FILES { \
+	"/usr/lib/vmware/bin/vmware-vmx", \
+	"/usr/lib/vmware/bin/vmware-vmx-debug", \
+	"/usr/lib/vmware/bin/vmware-vmx-stats", \
+	}
+
+#define VM_LNX_BACKUP_LIB_ALTERNATIVES { \
+	"/usr/lib/vmware/lib/libvmwarebase.so.0/libvmwarebase.so.0" \
+	"/usr/lib/vmware/lib/libvmwarebase.so/libvmwarebase.so" \
+}
+
 // Files to patch (have to keep the same order)
 #define VM_WIN_PATCH_FILES { \
 	"vmware-vmx.exe", \
@@ -74,6 +98,7 @@
 	"/usr/lib/vmware/lib/libvmwarebase.so/libvmwarebase.so" \
 	"/usr/lib/vmware/lib/libvmwarebase.so.0/libvmwarebase.so.0" \
 	}
+#define VM_LNX_ISO_DESTPATH "/usr/lib/vmware/isoimages"
 
 // Patch data
 #define SMC_HEADER_V0 "\xF2\x00\x00\x00\xF0\x00\x00\x00"

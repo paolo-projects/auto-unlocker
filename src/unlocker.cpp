@@ -52,6 +52,13 @@ namespace fs = std::filesystem;
 void preparePatch(fs::path backupPath);
 void doPatch();
 void downloadTools(std::string path);
+void copyTools(std::string toolspath);
+void stopServices();
+void restartServices();
+
+void install();
+void uninstall();
+void showhelp();
 
 // Main function
 
@@ -62,7 +69,7 @@ int main(int argc, const char* argv[])
 	{
 		// User not root and not elevated permissions
 		logd("The program is not running as root, the patch may not work properly.");
-		std::cout << "Running the program with sudo is suggested... Do you want to continue? (y/N) ";
+		std::cout << "Running the program with sudo is recommended... Do you want to continue? (y/N) ";
 		char c = getc(stdin);
 		
 		if (c != 'y' && c != 'Y')
@@ -72,22 +79,28 @@ int main(int argc, const char* argv[])
 		}
 	}
 #endif
-	// Default output path is ./tools/
-	std::string directory = (fs::path(".") / "tools" / "").string();
-	// Default backup path is ./backup/
-	fs::path backup = fs::path(".") / "backup";
-
 	if (argc > 1)
 	{
-		// First argument is the output path
-		directory = std::string(argv[1]);
-	}
+		const char* arg = argv[1];
 
-	if (argc > 2)
-	{
-		// Second argument is the backup path
-		backup = argv[2];
+		if (stricmp(arg, UNINSTALL_OPTION) == 0)
+			uninstall();
+		else if (stricmp(arg, HELP_OPTION) == 0)
+			showhelp();
+		else
+			install();
 	}
+	else install();
+
+	return 0;
+}
+
+void install()
+{
+	// Default output path is ./tools/
+	std::string toolsdirectory = (fs::path(".") / TOOLS_DOWNLOAD_FOLDER / "").string();
+	// Default backup path is ./backup/
+	fs::path backup = fs::path(".") / BACKUP_FOLDER;
 
 	logd("Killing services and backing up files...");
 	preparePatch(backup);
@@ -95,13 +108,230 @@ int main(int argc, const char* argv[])
 	logd("Patching files...");
 	doPatch();
 
-	logd("Downloading tools into \""+ directory +"\" directory...");
-	downloadTools(directory);
-	
-	return 0;
+	logd("Downloading tools into \"" + toolsdirectory + "\" directory...");
+	downloadTools(toolsdirectory);
+
+	logd("Copying tools into program directory...");
+	copyTools(toolsdirectory);
+
+	restartServices();
+
+	logd("Patch complete.");
+}
+
+void uninstall()
+{
+#ifdef _WIN32
+	VMWareInfoRetriever vmInfo;
+
+	// Stop services
+	stopServices();
+
+	// Default output path is ./tools/
+	fs::path toolsdirectory = fs::path(".") / TOOLS_DOWNLOAD_FOLDER;
+	// Default backup path is ./backup/
+	fs::path backup = fs::path(".") / BACKUP_FOLDER;
+
+	fs::path vmwareInstallDir = vmInfo.getInstallPath();
+	fs::path vmwareInstallDir64 = vmInfo.getInstallPath64();
+
+	logd("Restoring files...");
+	// Copy contents of backup/
+	if (fs::exists(backup))
+	{
+		for (const auto& file : fs::directory_iterator(backup))
+		{
+			if (file.is_regular_file())
+			{
+				try
+				{
+					if (fs::copy_file(file.path(), vmwareInstallDir / file.path().filename(), fs::copy_options::overwrite_existing))
+						logd("File \"" + file.path().string() + "\" restored successfully");
+					else
+						logerr("Error while restoring \"" + file.path().string() + "\".");
+				}
+				catch (std::filesystem::filesystem_error ex)
+				{
+					logerr(ex.what());
+				}
+			}
+		}
+		// Copy contents of backup/x64/
+		for (const auto& file : fs::directory_iterator(backup / "x64"))
+		{
+			if (file.is_regular_file())
+			{
+				try
+				{
+					if (fs::copy_file(file.path(), vmwareInstallDir64 / file.path().filename(), fs::copy_options::overwrite_existing))
+						logd("File \"" + file.path().string() + "\" restored successfully");
+					else
+						logerr("Error while restoring \"" + file.path().string() + "\".");
+				}
+				catch (std::filesystem::filesystem_error ex)
+				{
+					logerr(ex.what());
+				}
+			}
+		}
+	}
+	else {
+		logerr("Couldn't find backup files...");
+		return;
+	}
+	// Remove darwin*.* from InstallDir
+	for (const auto& file : fs::directory_iterator(vmwareInstallDir))
+	{
+		if (file.is_regular_file())
+		{
+			size_t is_drw = file.path().filename().string().find("darwin");
+			if (is_drw != std::string::npos && is_drw == 0)
+				fs::remove(file);
+		}
+	}
+
+	fs::remove_all(backup);
+	fs::remove_all(toolsdirectory);
+
+	// Restart services
+	restartServices();
+
+	logd("Uninstall complete.");
+#elif defined (__linux__)
+	// Default output path is ./tools/
+	fs::path toolsdirectory = fs::path(".") / TOOLS_DOWNLOAD_FOLDER;
+	// Default backup path is ./backup/
+	fs::path backup = fs::path(".") / BACKUP_FOLDER;
+
+	fs::path vmwareDir = VM_LNX_PATH;
+
+	logd("Restoring files...");
+
+	// Copy contents of backup/
+	std::vector<std::string> lnxBins = VM_LNX_BINS;
+	for (const auto& file : lnxBins)
+	{
+		try
+		{
+			if (fs::copy_file(backup / file, vmwareDir / file, fs::copy_options::overwrite_existing))
+				logd("File \"" + (backup / file).string() + "\" restored successfully");
+			else
+				logerr("Error while restoring \"" + (backup / file).string() + "\".");
+		}
+		catch (std::filesystem::filesystem_error ex)
+		{
+			logerr(ex.what());
+		}
+	}
+	std::vector<std::string> vmLibCandidates = VM_LNX_LIB_CANDIDATES;
+	for (const auto& lib : vmLibCandidates)
+	{
+		if (fs::exists(fs::path(lib).parent_path()))
+		{
+			try
+			{
+				if (fs::copy_file(backup / fs::path(lib).filename(), fs::path(lib), fs::copy_options::overwrite_existing))
+					logd("File \"" + (backup / fs::path(lib).filename()).string() + "\" restored successfully");
+				else
+					logerr("Error while restoring \"" + (backup / fs::path(lib).filename()).string() + "\".");
+			}
+			catch (std::filesystem::filesystem_error ex)
+			{
+				logerr(ex.what());
+			}
+			break;
+		}
+	}
+
+	// Remove darwin*.* from InstallDir
+	for (const auto& file : fs::directory_iterator(VM_LNX_ISO_DESTPATH))
+	{
+		if (file.is_regular_file())
+		{
+			size_t is_drw = file.path().filename().string().find("darwin");
+			if (is_drw != std::string::npos && is_drw == 0)
+				fs::remove(file);
+		}
+	}
+
+	fs::remove_all(backup);
+	fs::remove_all(toolsdirectory);
+
+	logd("Uninstall complete.");
+#endif
+}
+
+void showhelp()
+{
+	std::cout << "auto-unlocker" << std::endl << std::endl
+		<< "Run the program with one of these options:" << std::endl
+		<< "	--install (default): install the patch" << std::endl
+		<< "	--uninstall: remove the patch" << std::endl
+		<< "	--help: show this help message" << std::endl;
 }
 
 // Other methods
+
+// Copy tools to VMWare directory
+void copyTools(std::string toolspath)
+{
+#ifdef _WIN32
+	VMWareInfoRetriever vmInfo;
+	fs::path copyto = vmInfo.getInstallPath();
+	fs::path toolsfrom = toolspath;
+
+	try
+	{
+		if (fs::copy_file(toolsfrom / FUSION_ZIP_TOOLS_NAME, copyto / FUSION_ZIP_TOOLS_NAME))
+			logd("File \"" + (toolsfrom / FUSION_ZIP_TOOLS_NAME).string() + "\" copy done.");
+		else
+			logerr("File \"" + (toolsfrom / FUSION_ZIP_TOOLS_NAME).string() + "\" could not be copied.");
+	}
+	catch (const std::exception & e)
+	{
+		logerr(e.what());
+	}
+	
+	try
+	{
+		if (fs::copy_file(toolsfrom / FUSION_ZIP_PRE15_TOOLS_NAME, copyto / FUSION_ZIP_PRE15_TOOLS_NAME))
+			logd("File \"" + (toolsfrom / FUSION_ZIP_PRE15_TOOLS_NAME).string() + "\" copy done.");
+		else
+			logerr("File \"" + (toolsfrom / FUSION_ZIP_PRE15_TOOLS_NAME).string() + "\" could not be copied.");
+	}
+	catch (const std::exception & e)
+	{
+		logerr(e.what());
+	}
+#elif defined (__linux__)
+	fs::path copyto = VM_LNX_ISO_DESTPATH;
+	fs::path toolsfrom = toolspath;
+
+	try
+	{
+		if (fs::copy_file(toolsfrom / FUSION_ZIP_TOOLS_NAME, copyto / FUSION_ZIP_TOOLS_NAME))
+			logd("File \"" + (toolsfrom / FUSION_ZIP_TOOLS_NAME).string() + "\" copy done.");
+		else
+			logerr("File \"" + (toolsfrom / FUSION_ZIP_TOOLS_NAME).string() + "\" could not be copied.");
+	}
+	catch (const std::exception & e)
+	{
+		logerr(e.what());
+	}
+
+	try
+	{
+		if (fs::copy_file(toolsfrom / FUSION_ZIP_PRE15_TOOLS_NAME, copyto / FUSION_ZIP_PRE15_TOOLS_NAME))
+			logd("File \"" + (toolsfrom / FUSION_ZIP_PRE15_TOOLS_NAME).string() + "\" copy done.");
+		else
+			logerr("File \"" + (toolsfrom / FUSION_ZIP_PRE15_TOOLS_NAME).string() + "\" could not be copied.");
+	}
+	catch (const std::exception & e)
+	{
+		logerr(e.what());
+	}
+#endif
+}
 
 // Actual patch code
 void doPatch()
@@ -147,7 +377,7 @@ void doPatch()
 	logd("File: " + vmwarebase.filename().string());
 	CHECKRES(Patcher::patchBase(vmwarebase));
 
-#elif defined (__linux)
+#elif defined (__linux__)
 	fs::path vmBinPath = VM_LNX_PATH;
 
 	std::string binList[] = VM_LNX_BINS;
@@ -200,12 +430,9 @@ void doPatch()
 #endif
 }
 
-// Kill services / processes and backup files
-void preparePatch(fs::path backupPath)
+void stopServices()
 {
 #ifdef _WIN32
-	// Retrieve installation path from registry
-	VMWareInfoRetriever vmInstall;
 	// Stop services
 	auto srvcList = std::list<std::string> VM_KILL_SERVICES;
 	for (auto service : srvcList)
@@ -230,6 +457,36 @@ void preparePatch(fs::path backupPath)
 		else
 			logerr("Could not kill process \"" + process + "\".");
 	}
+#endif
+}
+
+void restartServices()
+{
+#ifdef _WIN32
+	logd("Restarting services...");
+	std::vector<std::string> servicesToStart = VM_KILL_SERVICES;
+	for (auto it = servicesToStart.rbegin(); it != servicesToStart.rend(); it++)
+	{
+		try
+		{
+			ServiceStopper::StartService_s(*it);
+		}
+		catch (const ServiceStopper::ServiceStopException & ex)
+		{
+			logerr("Couldn't start service " + *it);
+		}
+	}
+#endif
+}
+
+// Kill services / processes and backup files
+void preparePatch(fs::path backupPath)
+{
+#ifdef _WIN32
+	// Retrieve installation path from registry
+	VMWareInfoRetriever vmInstall;
+
+	stopServices();
 
 	// Backup files
 	auto filesToBackup = std::map<std::string, std::string> VM_WIN_BACKUP_FILES;
@@ -256,6 +513,51 @@ void preparePatch(fs::path backupPath)
 	}
 #elif defined (__linux__)
 	//TODO: linux code here
+	// Backup files
+	std::string filesToBackup[] = VM_LNX_BACKUP_FILES;
+	fs::path destpath = backupPath;
+
+	for (auto element : filesToBackup)
+	{
+		fs::path fPath = element;
+		if (!fs::exists(destpath))
+			fs::create_directory(destpath);
+
+		try
+		{
+			if (fs::copy_file(fPath, destpath / fPath.filename(), fs::copy_options::overwrite_existing))
+				logd("File \"" + fPath.string() + "\" backup done.");
+			else
+				logerr("File \"" + fPath.string() + "\" could not be copied.");
+		}
+		catch (const std::exception & e)
+		{
+			logerr(e.what());
+		}
+	}
+
+	std::string libsAlternatives[] = VM_LNX_BACKUP_LIB_ALTERNATIVES;
+
+	for (auto lib : libsAlternatives)
+	{
+		fs::path libpath = lib;
+		if (fs::exists(libpath.parent_path()))
+		{
+			try
+			{
+				if (fs::copy_file(libpath, destpath / libpath.filename(), fs::copy_options::overwrite_existing))
+					logd("File \"" + libpath.string() + "\" backup done.");
+				else
+					logerr("File \"" + libpath.string() + "\" could not be copied.");
+
+				break;
+			}
+			catch (const std::exception & e)
+			{
+				logerr(e.what());
+			}
+		}
+	}
 #else
 	// Either the compiler macros are not working or the the tool is trying to be compiled on an OS where it's not meant to be compiled
 	logerr("OS not supported");

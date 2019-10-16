@@ -23,9 +23,15 @@ been shutdown.
 ## How to use
 I created the C++ version of this tool to avoid issues between different Python versions and OSes.
 
-**Windows:** just download from the *releases* section and run the executable. The program should take care of everything by itself.
+**Windows:** just download from the *releases* section, extract to a folder (store it if you want to be able to uninstall later) and run the executable. The program should take care of everything by itself.
 
 **Linux:** you need to compile the program first. After you compiled it, ```chmod +x``` if needed and run ```sudo auto-unlocker```.
+
+**Command line options:**
+
+* **--install** *(Default behavior when called with no arguments)* Installs the patch.
+* **--uninstall** Uninstalls the patch. Works only if the patch was previously installed and the *backup* folder is intact
+* **--help** Shows a list of the available options
 
 ## Compile
 The program can be compiled with CMake. Run CMake on the source dir and it will generate a ready to build project.
@@ -41,4 +47,4 @@ The program needs the following libraries:
 Run *CMake* on the source folder to generate a Visual Studio Project. The CMakeList is set up to compile with static libraries, if you have shared ones change *CMakeLists.txt* file accordingly. Point the script to the proper library/headers paths when prompted.
 
 **Linux:**
-Use the embedded Makefile. Get needed libraries (or compile them) first, then run ```make```
+Use the embedded Makefile. Get needed libraries (or compile them and install) first, then run ```make```
