@@ -5,7 +5,7 @@ obj	= $(src:.cpp=.o)
 
 CXXFLAGS	= -Wall -std=c++17 -Iinclude
 
-LIBS	= -lcurl -larchive -lpthread
+override LIBS	+= -lcurl -larchive -lpthread
 
 auto-unlocker:	$(obj)
 	echo $(INCLUDE)

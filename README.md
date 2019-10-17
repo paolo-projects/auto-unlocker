@@ -49,4 +49,6 @@ Run *CMake* on the source folder to generate a Visual Studio Project. The CMakeL
 **Linux:**
 Use the embedded Makefile. Get needed libraries (or compile them and install) first, then run ```make```
 
-*Note regarding g++ version:* by default, Linux ships with g++ v7, which doesn't support natively c++17 features. To compile the program you have to install at least g++-8 and set CXX variable when running make (```make CXX=g++-8```)
+*Note regarding default g++ version on Ubuntu:* by default, Ubuntu ships with g++ v7, which doesn't support natively c++17 features. To compile the program you have to install at least g++-8, set CXX variable when running make and add stdc++fs library dependence (```make CXX=g++-8 LIBS=-lstdc++fs```)
+
+Alternatively, you can install g++-9 and avoid adding the library dependency.
