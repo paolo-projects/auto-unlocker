@@ -1,7 +1,7 @@
 # Auto-Unlocker
 A one-click Unlocker for VMWare Player and Workstation.
 
-**Based on the [DrDonk Python Unlocker](https://github.com/DrDonk/unlocker)**
+**A C++ port of the [DrDonk Python Unlocker](https://github.com/DrDonk/unlocker)**
 
 ## DrDonk Unlocker
 
@@ -32,6 +32,8 @@ I created the C++ version of this tool to avoid issues between different Python 
 * ```--install``` *(Default behavior when called with no arguments)* Installs the patch.
 * ```--uninstall``` Uninstalls the patch. Works only if the patch was previously installed and the *backup* folder is intact
 * ```--help``` Shows a list of the available options
+
+**I tested the program on Windows with VMware Player 15.0.** I plan to test it on Linux soon, though as of now I don't know if it works there, or with other VMware versions.
 
 ## Compile
 The program can be compiled on Windows with CMake, provided you get or compile the needed libraries first. Run CMake on the source dir and it will generate a ready to build project.
