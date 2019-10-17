@@ -2,7 +2,7 @@
 	Unlocker - Patcher + Tools Downloader
 	Created by Paolo Infante
 
-	A based on "Unlocker" by DrDonk for a native solution to python errors and 
+	Based on "Unlocker" by DrDonk for a native solution to python errors and 
 	virus warnings.
 
 	I coded from scratch all the patch routines (I tried to be consistent with C++ library usage
@@ -45,7 +45,7 @@
 #define stricmp(a, b) strcasecmp(a, b)
 #endif
 
-#define CHECKRES(x) if(!(x)) logerr("Couldn't patch file.")
+#define CHECKRES(x) try{ (x); } catch (const Patcher::PatchException& exc) { logerr(exc.what()); }
 #define KILL(x) (x); exit(1);
 
 namespace fs = std::filesystem;
@@ -90,8 +90,14 @@ int main(int argc, const char* argv[])
 			uninstall();
 		else if (stricmp(arg, HELP_OPTION) == 0)
 			showhelp();
-		else
+		else if (stricmp(arg, INSTALL_OPTION) == 0)
 			install();
+		else
+		{
+			logd("Unrecognized command.");
+			logd("");
+			showhelp();
+		}
 	}
 	else install();
 

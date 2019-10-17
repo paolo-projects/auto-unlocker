@@ -46,9 +46,12 @@ bool Patcher::cmpcarr(const char* c1, const char* c2, size_t len)
 }
 
 // Different implementations for reusing the same memory stream
-std::optional<unsigned long long> Patcher::searchForOffset(const std::vector<char>& memstream, const std::vector<char>& sequence)
+std::optional<unsigned long long> Patcher::searchForOffset(const std::vector<char>& memstream, const std::vector<char>& sequence, unsigned long long from)
 {
-	auto sRes = std::search(memstream.begin(), memstream.end(), sequence.begin(), sequence.end());
+	if (from >= memstream.size() - sequence.size())
+		return {};
+
+	auto sRes = std::search(memstream.begin()+from, memstream.end(), sequence.begin(), sequence.end());
 	if (sRes != memstream.end())
 		return (sRes - memstream.begin());
 	else
@@ -64,7 +67,7 @@ std::optional<unsigned long long> Patcher::searchForLastOffset(const std::vector
 		return {};
 }
 
-std::optional<unsigned long long> Patcher::searchForOffset(std::fstream& stream, const std::vector<char>& sequence)
+std::optional<unsigned long long> Patcher::searchForOffset(std::fstream& stream, const std::vector<char>& sequence, unsigned long long from)
 {
 	//FIXME: it's probably better to reuse the same memory stream to avoid reading multiple times from HD
 	stream.clear();
@@ -81,7 +84,10 @@ std::optional<unsigned long long> Patcher::searchForOffset(std::fstream& stream,
 	}
 	delete[] buffer;
 
-	auto sRes = std::search(memFile.begin(), memFile.end(), sequence.begin(), sequence.end());
+	if (from >= memFile.size() - sequence.size())
+		return {};
+
+	auto sRes = std::search(memFile.begin()+from, memFile.end(), sequence.begin(), sequence.end());
 	if (sRes != memFile.end())
 		return (sRes - memFile.begin());
 	else
@@ -172,11 +178,11 @@ void Patcher::printkey(int i, unsigned long long offset, const smc_key_struct& s
 	logd(result.str());
 }
 
-bool Patcher::patchSMC(fs::path name, bool isSharedObj)
+void Patcher::patchSMC(fs::path name, bool isSharedObj)
 {
 	std::fstream i_file(name, std::ios_base::binary | std::ios_base::out | std::ios_base::in);
 	if (!i_file.good())
-		return false;
+		throw PatchException("Couldn't open file %s", name.c_str());
 
 	long smc_old_memptr = 0;
 	long smc_new_memptr = 0;
@@ -212,30 +218,30 @@ bool Patcher::patchSMC(fs::path name, bool isSharedObj)
 	// Find the vSMC headers
 	auto res = searchForOffset(memFile, makeVector(smc_header_v0, SMC_HEADER_V0_SZ));
 	if (!res.has_value())
-		return false;
+		throw PatchException("Couldn't find smc_header_v0_offset");
 
 	unsigned long long smc_header_v0_offset = res.value() - 8;
 
 	res = searchForOffset(memFile, makeVector(smc_header_v1, SMC_HEADER_V1_SZ));
 	if (!res.has_value())
-		return false;
+		throw PatchException("Couldn't find smc_header_v1_offset");
 	unsigned long long smc_header_v1_offset = res.value() -8;
 
 	// Find '#KEY' keys
 	res = searchForOffset(memFile, makeVector(key_key, KEY_KEY_SZ)); //FIXME: doesn't work
 	if (!res.has_value())
-		return false;
+		throw PatchException("Couldn't find smc_key0 offset");
 	unsigned long long smc_key0 = res.value();
 
 	res = searchForLastOffset(memFile, makeVector(key_key, KEY_KEY_SZ));
 	if (!res.has_value())
-		return false;
+		throw PatchException("Couldn't find smc_key1 offset");
 	unsigned long long smc_key1 = res.value();
 
 	// Find '$Adr' key only V1 table
 	res = searchForOffset(memFile, makeVector(adr_key, ADR_KEY_SZ));
 	if (!res.has_value())
-		return false;
+		throw PatchException("Couldn't find smc_adr offset");
 	unsigned long long smc_adr = res.value();
 
 	memFile.clear();
@@ -418,12 +424,14 @@ std::pair<unsigned long long, unsigned long long> Patcher::patchKeys(std::fstrea
 	}
 }
 
-bool Patcher::patchBase(fs::path name)
+void Patcher::patchBase(fs::path name)
 {
 
 	//Patch file
 	logd("GOS Patching: " + name.filename().string());
 	std::fstream file(name, std::ios_base::binary | std::ios_base::in | std::ios_base::out);
+	if (!file.good())
+		throw PatchException("Couldn't open file %s", name.c_str());
 
 	// Entry to search for in GOS table
 	// Should work for Workstation 12 - 15...
@@ -447,6 +455,7 @@ bool Patcher::patchBase(fs::path name)
 	// 0xBE -- > 0xBF (WKS 12)
 	// 0x3E -- > 0x3F (WKS 14)
 
+	/* REGEX WAY --- Seems to not work
 	unsigned int occurrences = 0;
 	auto reg_iter = std::cregex_iterator(memFile.data(), memFile.data()+memFile.size(), darwin);
 
@@ -468,17 +477,51 @@ bool Patcher::patchBase(fs::path name)
 		logd("GOS Patched flag @: " + hexRepresentation(pos));
 
 		occurrences++;
+	} */
+
+	/* Iterative way */
+	std::vector<char> darwinPattern[4];
+
+	darwinPattern[0] = DARWIN_PATTERN_PERM_1;
+	darwinPattern[1] = DARWIN_PATTERN_PERM_2;
+	darwinPattern[2] = DARWIN_PATTERN_PERM_3;
+	darwinPattern[3] = DARWIN_PATTERN_PERM_4;
+	
+	const size_t mStreamLen = memFile.size();
+	
+	for (int i = 0; i < 4; i++)
+	{
+		const std::vector<char>& darwinPatt = darwinPattern[i];
+		std::optional<unsigned long long> val = 0;
+		do
+		{
+			val = searchForOffset(memFile, darwinPatt, val.value());
+			if (val.has_value())
+			{
+				auto pos = val.value();
+				file.clear();
+				file.seekg(pos + 32);
+
+				char flag = file.get();
+				flag |= 1;
+
+				file.clear();
+				file.seekg(pos + 32);
+
+				file.put(flag);
+				logd("GOS Patched flag @: " + hexRepresentation(pos));
+				val = val.value() + 40;
+			}
+		} while (val.has_value());
 	}
 
 	file.flush();
 	file.close();
 
 	logd("GOS Patched: " + name.filename().string());
-
-	return occurrences > 0;
 }
 
-bool Patcher::patchVmkctl(fs::path name)
+void Patcher::patchVmkctl(fs::path name)
 {	
 	logd("smcPresent Patching: " + name.filename().string());
 	std::fstream file(name, std::ios_base::in | std::ios_base::out);
@@ -497,13 +540,12 @@ bool Patcher::patchVmkctl(fs::path name)
 
 		file.flush();
 		file.close();
-
-		return true;
-	} else
-		return false;
+	}
+	else
+		throw PatchException("Couldn't find Vmkctl offset");
 }
 
-bool Patcher::patchElf(std::fstream& file, long long oldoffset, long long newoffset)
+void Patcher::patchElf(std::fstream& file, long long oldoffset, long long newoffset)
 {
 	file.clear();
 	file.seekg(std::ios_base::beg);
@@ -512,12 +554,12 @@ bool Patcher::patchElf(std::fstream& file, long long oldoffset, long long newoff
 	file.read(buf, 4);
 	if (strcmp(buf, "\x7f""ELF") != 0)
 	{
-		return false; // Not an ELF binary
+		throw PatchException("Not an ELF binary.");
 	}
 	unsigned char u = file.get();
 	if (u != E_CLASS64)
 	{
-		return false; // Not a 64 bit binary
+		throw PatchException("Not a 64 bit binary.");
 	}
 	file.clear();
 	file.seekg(40);
@@ -531,13 +573,13 @@ bool Patcher::patchElf(std::fstream& file, long long oldoffset, long long newoff
 	file.read(reinterpret_cast<char*>(&e_shnum), sizeof(unsigned short));
 	file.read(reinterpret_cast<char*>(&e_shstrndx), sizeof(unsigned short));
 
-	printf("e_shoff: 0x%02X e_shentsize: 0x%02X e_shnum:0x%02X e_shstrndx:0x%02X\n", e_shoff, e_shentsize,
+	printf("e_shoff: 0x%02llX e_shentsize: 0x%02X e_shnum:0x%02X e_shstrndx:0x%02X\n", e_shoff, e_shentsize,
 		e_shnum, e_shstrndx);
 
 	for (unsigned short i = 0; i < e_shnum; i++)
 	{
 		file.clear();
-		file.seekg(e_shoff + i * e_shentsize);
+		file.seekg(e_shoff + i * (unsigned long long)e_shentsize);
 		LLQQQQLLQQ e_sh = { 0 };
 		
 		file.read(reinterpret_cast<char*>(&e_sh), e_shentsize);

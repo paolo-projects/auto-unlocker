@@ -7,6 +7,7 @@
 #include <sstream>
 #include <regex>
 #include <iomanip>
+#include <cstdarg>
 
 #include "debugutils.h"
 #include "config.h"
@@ -15,6 +16,27 @@ namespace fs = std::filesystem;
 
 namespace Patcher
 {
+	class PatchException : std::exception
+	{
+	public:
+		PatchException(const char* message, ...) 
+		{
+			va_list args;
+			va_start(args, message);
+			char* buf = new char[1024];
+			vsprintf(buf, message, args);
+			va_end(args);
+			msg = buf;
+		}
+		~PatchException()
+		{
+			delete[] msg;
+		}
+		const char* what() const noexcept { return msg; }
+	private:
+		const char* msg;
+	};
+
 	struct LLQQQQLLQQ // couldn't find a better name LOL
 	{
 		unsigned long l1;
@@ -51,19 +73,19 @@ namespace Patcher
 	std::string hexRepresentation(long long bin);
 	std::string hexRepresentation(std::vector<char> bin);
 	std::string hexRepresentation(std::string bin);
-	std::optional<unsigned long long> searchForOffset(const std::vector<char>& memstream, const std::vector<char>& sequence);
+	std::optional<unsigned long long> searchForOffset(const std::vector<char>& memstream, const std::vector<char>& sequence, unsigned long long from = 0);
 	std::optional<unsigned long long> searchForLastOffset(const std::vector<char>& memstream, const std::vector<char>& sequence);
-	std::optional<unsigned long long> searchForOffset(std::fstream& stream, const std::vector<char>& sequence);
+	std::optional<unsigned long long> searchForOffset(std::fstream& stream, const std::vector<char>& sequence, unsigned long long from = 0);
 	std::optional<unsigned long long> searchForLastOffset(std::fstream& stream, const std::vector<char>& sequence);
 	bool cmpcarr(const char* c1, const char* c2, size_t len);
 	void printkey(int i, unsigned long long offset, const smc_key_struct& smc_key, const std::vector<char>& smc_data);
 
 	// Core functions
-	bool patchSMC(fs::path name, bool isSharedObj);
+	void patchSMC(fs::path name, bool isSharedObj);
 	std::pair<unsigned long long, unsigned long long> patchKeys(std::fstream& file, long long key);
-	bool patchBase(fs::path name);
-	bool patchVmkctl(fs::path name);
-	bool patchElf(std::fstream& file, long long oldoffset, long long newoffset);
+	void patchBase(fs::path name);
+	void patchVmkctl(fs::path name);
+	void patchElf(std::fstream& file, long long oldoffset, long long newoffset);
 }
 
 #endif // PATCHUTILS_H
