@@ -3,7 +3,7 @@ CXX	?= g++
 src	= $(wildcard src/*.cpp)
 obj	= $(src:.cpp=.o)
 
-CXXFLAGS	= -Wall -std="c++17" -Iinclude
+CXXFLAGS	= -Wall -std=c++17 -Iinclude
 
 LIBS	= -lcurl -larchive -lpthread
 

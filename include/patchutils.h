@@ -6,6 +6,7 @@
 #include <optional>
 #include <sstream>
 #include <regex>
+#include <iomanip>
 
 #include "debugutils.h"
 #include "config.h"
