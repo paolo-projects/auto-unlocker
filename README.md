@@ -34,7 +34,7 @@ I created the C++ version of this tool to avoid issues between different Python 
 * ```--help``` Shows a list of the available options
 
 ## Compile
-The program can be compiled with CMake. Run CMake on the source dir and it will generate a ready to build project.
+The program can be compiled on Windows with CMake, provided you get or compile the needed libraries first. Run CMake on the source dir and it will generate a ready to build project.
 
 The program needs the following libraries:
 
@@ -44,7 +44,7 @@ The program needs the following libraries:
 
 
 **Windows:** 
-Run *CMake* on the source folder to generate a Visual Studio Project. The CMakeList is set up to compile with static libraries, if you have shared ones change *CMakeLists.txt* file accordingly. Point the script to the proper library/headers paths when prompted.
+Run *CMake* on the source folder to generate a Visual Studio Project. The CMakeList is set up to compile with static libraries, if you have shared ones change *CMakeLists.txt* file accordingly (**UNLOCKER_STATIC_LIBS_WIN** variable). Point the CMake utility to the proper library/headers paths when prompted or add them to your PATH.
 
 **Linux:**
 Use the embedded Makefile. Get needed libraries (or compile them and install) first, then run ```make```
