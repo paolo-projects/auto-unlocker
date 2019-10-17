@@ -8,6 +8,7 @@
 #include <regex>
 #include <iomanip>
 #include <cstdarg>
+#include <array>
 
 #include "debugutils.h"
 #include "config.h"

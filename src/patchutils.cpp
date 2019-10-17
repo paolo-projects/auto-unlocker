@@ -75,14 +75,15 @@ std::optional<unsigned long long> Patcher::searchForOffset(std::fstream& stream,
 
 	std::vector<char> memFile;
 
-	char* buffer = new char[FREAD_BUF_SIZE];
-	while (!stream.eof())
 	{
-		stream.read(buffer, FREAD_BUF_SIZE);
-		size_t readBytes = stream.gcount();
-		memFile.insert(memFile.end(), buffer, buffer + readBytes);
+		std::array<char, FREAD_BUF_SIZE> buffer{};
+		while (!stream.eof())
+		{
+			stream.read(buffer.data(), buffer.size());
+			size_t readBytes = stream.gcount();
+			memFile.insert(memFile.end(), buffer.begin(), buffer.end());
+		}
 	}
-	delete[] buffer;
 
 	if (from >= memFile.size() - sequence.size())
 		return {};
@@ -101,14 +102,15 @@ std::optional<unsigned long long> Patcher::searchForLastOffset(std::fstream& str
 
 	std::vector<char> memFile;
 
-	char* buffer = new char[FREAD_BUF_SIZE];
-	while (!stream.eof())
 	{
-		stream.read(buffer, FREAD_BUF_SIZE);
-		size_t readBytes = stream.gcount();
-		memFile.insert(memFile.end(), buffer, buffer + readBytes);
+		std::array<char, FREAD_BUF_SIZE> buffer{};
+		while (!stream.eof())
+		{
+			stream.read(buffer.data(), buffer.size());
+			size_t readBytes = stream.gcount();
+			memFile.insert(memFile.end(), buffer.begin(), buffer.end());
+		}
 	}
-	delete[] buffer;
 
 	auto sRes = std::find_end(memFile.begin(), memFile.end(), sequence.begin(), sequence.end());
 	if (sRes != memFile.end())
@@ -206,14 +208,15 @@ void Patcher::patchSMC(fs::path name, bool isSharedObj)
 	// Load up whole file into memory
 	std::vector<char> memFile;
 
-	char* buffer = new char[FREAD_BUF_SIZE];
-	while (!i_file.eof())
 	{
-		i_file.read(buffer, FREAD_BUF_SIZE);
-		size_t readBytes = i_file.gcount();
-		memFile.insert(memFile.end(), buffer, buffer + readBytes);
+		std::array<char, FREAD_BUF_SIZE> buffer{};
+		while (!i_file.eof())
+		{
+			i_file.read(buffer.data(), buffer.size());
+			size_t readBytes = i_file.gcount();
+			memFile.insert(memFile.end(), buffer.begin(), buffer.end());
+		}
 	}
-	delete[] buffer;
 
 	// Find the vSMC headers
 	auto res = searchForOffset(memFile, makeVector(smc_header_v0, SMC_HEADER_V0_SZ));
@@ -438,15 +441,16 @@ void Patcher::patchBase(fs::path name)
 
 	std::vector<char> memFile;
 
-	char* buffer = new char[FREAD_BUF_SIZE];
-	while (!file.eof())
 	{
-		file.read(buffer, FREAD_BUF_SIZE);
-		size_t readBytes = file.gcount();
-		memFile.insert(memFile.end(), buffer, buffer + readBytes);
+		std::array<char, FREAD_BUF_SIZE> buffer{};
+		while (!file.eof())
+		{
+			file.read(buffer.data(), buffer.size());
+			size_t readBytes = file.gcount();
+			memFile.insert(memFile.end(), buffer.begin(), buffer.end());
+		}
 	}
-	delete[] buffer;
-
+	/* REGEX WAY --- Seems to not work
 	std::regex darwin = std::regex(DARWIN_REGEX);
 	std::string buf;
 	buf.resize(32);
@@ -455,7 +459,6 @@ void Patcher::patchBase(fs::path name)
 	// 0xBE -- > 0xBF (WKS 12)
 	// 0x3E -- > 0x3F (WKS 14)
 
-	/* REGEX WAY --- Seems to not work
 	unsigned int occurrences = 0;
 	auto reg_iter = std::cregex_iterator(memFile.data(), memFile.data()+memFile.size(), darwin);
 

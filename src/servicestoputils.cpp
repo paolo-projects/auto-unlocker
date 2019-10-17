@@ -67,8 +67,6 @@ void ServiceStopper::StopService_s(std::string serviceName)
 
 	while (ssp.dwCurrentState == SERVICE_STOP_PENDING)
 	{
-		throw ServiceStopException("Service stop pending...");
-
 		// Do not wait longer than the wait hint. A good interval is 
 		// one-tenth of the wait hint but not less than 1 second  
 		// and not more than 10 seconds. 
@@ -168,13 +166,15 @@ bool ServiceStopper::StopDependantServices(SC_HANDLE schService, SC_HANDLE schSC
 	ULONGLONG dwStartTime = GetTickCount64();
 	ULONGLONG dwTimeout = 10000; // 10-second time-out
 
+	bool success = true;
+
 	// Pass a zero-length buffer to get the required buffer size.
 	if (EnumDependentServices(schService, SERVICE_ACTIVE,
 		lpDependencies, 0, &dwBytesNeeded, &dwCount))
 	{
 		// If the Enum call succeeds, then there are no dependent
 		// services, so do nothing.
-		return true;
+		return success;
 	}
 	else
 	{
@@ -193,7 +193,10 @@ bool ServiceStopper::StopDependantServices(SC_HANDLE schService, SC_HANDLE schSC
 			if (!EnumDependentServices(schService, SERVICE_ACTIVE,
 				lpDependencies, dwBytesNeeded, &dwBytesNeeded,
 				&dwCount))
-				return false;
+			{
+				success = false;
+				__leave;
+			}
 
 			for (i = 0; i < dwCount; i++)
 			{
@@ -204,14 +207,20 @@ bool ServiceStopper::StopDependantServices(SC_HANDLE schService, SC_HANDLE schSC
 					SERVICE_STOP | SERVICE_QUERY_STATUS);
 
 				if (!hDepService)
-					return false;
+				{
+					success = false;
+					__leave;
+				}
 
 				__try {
 					// Send a stop code.
 					if (!ControlService(hDepService,
 						SERVICE_CONTROL_STOP,
 						(LPSERVICE_STATUS)&ssp))
-						return false;
+					{
+						success = false;
+						__leave;
+					}
 
 					// Wait for the service to stop.
 					while (ssp.dwCurrentState != SERVICE_STOPPED)
@@ -223,13 +232,19 @@ bool ServiceStopper::StopDependantServices(SC_HANDLE schService, SC_HANDLE schSC
 							(LPBYTE)&ssp,
 							sizeof(SERVICE_STATUS_PROCESS),
 							&dwBytesNeeded))
-							return false;
+						{
+							success = false;
+							__leave;
+						}
 
 						if (ssp.dwCurrentState == SERVICE_STOPPED)
 							break;
 
 						if (GetTickCount64() - dwStartTime > dwTimeout)
-							return false;
+						{
+							success = false;
+							__leave;
+						}
 					}
 				}
 				__finally
@@ -245,7 +260,7 @@ bool ServiceStopper::StopDependantServices(SC_HANDLE schService, SC_HANDLE schSC
 			HeapFree(GetProcessHeap(), 0, lpDependencies);
 		}
 	}
-	return true;
+	return success;
 #else
 	return false;
 #endif
@@ -270,7 +285,6 @@ bool ServiceStopper::StartService_s(std::string serviceName)
 	if (NULL == schSCManager)
 	{
 		throw ServiceStopException("OpenSCManager failed (%d)", GetLastError());
-		return false;
 	}
 
 	// Get a handle to the service.
@@ -282,9 +296,8 @@ bool ServiceStopper::StartService_s(std::string serviceName)
 
 	if (schService == NULL)
 	{
-		throw ServiceStopException("OpenService failed (%d)", GetLastError());
 		CloseServiceHandle(schSCManager);
-		return false;
+		throw ServiceStopException("OpenService failed (%d)", GetLastError());
 	}
 
 	// Check the status in case the service is not stopped. 
@@ -296,10 +309,9 @@ bool ServiceStopper::StartService_s(std::string serviceName)
 		sizeof(SERVICE_STATUS_PROCESS), // size of structure
 		&dwBytesNeeded))              // size needed if buffer is too small
 	{
-		throw ServiceStopException("QueryServiceStatusEx failed (%d)", GetLastError());
 		CloseServiceHandle(schService);
 		CloseServiceHandle(schSCManager);
-		return false;
+		throw ServiceStopException("QueryServiceStatusEx failed (%d)", GetLastError());
 	}
 
 	// Check if the service is already running. It would be possible 
@@ -307,10 +319,9 @@ bool ServiceStopper::StartService_s(std::string serviceName)
 
 	if (ssStatus.dwCurrentState != SERVICE_STOPPED && ssStatus.dwCurrentState != SERVICE_STOP_PENDING)
 	{
-		throw ServiceStopException("Cannot start the service because it is already running");
 		CloseServiceHandle(schService);
 		CloseServiceHandle(schSCManager);
-		return false;
+		throw ServiceStopException("Cannot start the service because it is already running");
 	}
 
 	// Save the tick count and initial checkpoint.
@@ -344,10 +355,9 @@ bool ServiceStopper::StartService_s(std::string serviceName)
 			sizeof(SERVICE_STATUS_PROCESS), // size of structure
 			&dwBytesNeeded))              // size needed if buffer is too small
 		{
-			throw ServiceStopException("QueryServiceStatusEx failed (%d)\n", GetLastError());
 			CloseServiceHandle(schService);
 			CloseServiceHandle(schSCManager);
-			return false;
+			throw ServiceStopException("QueryServiceStatusEx failed (%d)\n", GetLastError());
 		}
 
 		if (ssStatus.dwCheckPoint > dwOldCheckPoint)
@@ -361,10 +371,9 @@ bool ServiceStopper::StartService_s(std::string serviceName)
 		{
 			if (GetTickCount64() - dwStartTickCount > ssStatus.dwWaitHint)
 			{
-				throw ServiceStopException("Timeout waiting for service to stop\n");
 				CloseServiceHandle(schService);
 				CloseServiceHandle(schSCManager);
-				return false;
+				throw ServiceStopException("Timeout waiting for service to stop\n");
 			}
 		}
 	}
@@ -376,10 +385,9 @@ bool ServiceStopper::StartService_s(std::string serviceName)
 		0,           // number of arguments 
 		NULL))      // no arguments 
 	{
-		throw ServiceStopException("StartService failed (%d)\n", GetLastError());
 		CloseServiceHandle(schService);
 		CloseServiceHandle(schSCManager);
-		return false;
+		throw ServiceStopException("StartService failed (%d)\n", GetLastError());
 	}
 
 	// Check the status until the service is no longer start pending. 
@@ -391,10 +399,9 @@ bool ServiceStopper::StartService_s(std::string serviceName)
 		sizeof(SERVICE_STATUS_PROCESS), // size of structure
 		&dwBytesNeeded))              // if buffer too small
 	{
-		throw ServiceStopException("QueryServiceStatusEx failed (%d)\n", GetLastError());
 		CloseServiceHandle(schService);
 		CloseServiceHandle(schSCManager);
-		return false;
+		throw ServiceStopException("QueryServiceStatusEx failed (%d)\n", GetLastError());
 	}
 
 	// Save the tick count and initial checkpoint.
@@ -426,8 +433,9 @@ bool ServiceStopper::StartService_s(std::string serviceName)
 			sizeof(SERVICE_STATUS_PROCESS), // size of structure
 			&dwBytesNeeded))              // if buffer too small
 		{
+			CloseServiceHandle(schService);
+			CloseServiceHandle(schSCManager);
 			throw ServiceStopException("QueryServiceStatusEx failed (%d)\n", GetLastError());
-			break;
 		}
 
 		if (ssStatus.dwCheckPoint > dwOldCheckPoint)
@@ -447,11 +455,10 @@ bool ServiceStopper::StartService_s(std::string serviceName)
 		}
 	}
 
-	// Determine whether the service is running.
-
 	CloseServiceHandle(schService);
 	CloseServiceHandle(schSCManager);
 
+	// Determine whether the service is running.
 	return (ssStatus.dwCurrentState == SERVICE_RUNNING);
 #else
 	return false;
@@ -487,7 +494,7 @@ bool ServiceStopper::KillProcess(std::string procName)
 		::GetExitCodeProcess(hHandle, &dwExitCode);
 		return ::TerminateProcess(hHandle, dwExitCode);
 	}
-	else return false;
+	else throw ServiceStopException("Couldn't kill %s, process not found.", procName.c_str());
 #endif
 	return false;
 }
