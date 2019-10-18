@@ -39,11 +39,12 @@
 
 #ifdef __linux__
 #include <unistd.h>
-#include <stdio.h>
 #include <strings.h>
 
 #define stricmp(a, b) strcasecmp(a, b)
 #endif
+
+#include <stdio.h>
 
 #define CHECKRES(x) try{ (x); } catch (const Patcher::PatchException& exc) { logerr(exc.what()); }
 #define KILL(x) (x); exit(1);
@@ -99,7 +100,21 @@ int main(int argc, const char* argv[])
 			showhelp();
 		}
 	}
-	else install();
+	else {
+		fs::path backupFolder = BACKUP_FOLDER;
+		if (fs::exists(backupFolder))
+		{
+			std::cout << "A backup folder has been found. Do you wish to uninstall the previous patch? Type y to uninstall, n to continue with installation." << std::endl
+				<< "(Y/n) ";
+			
+			char c = getc(stdin);
+
+			if (c == 'n' || c == 'N')
+				install();
+			else
+				uninstall();
+		}
+	}
 
 	return 0;
 }
