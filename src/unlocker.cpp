@@ -113,7 +113,7 @@ int main(int argc, const char* argv[])
 				install();
 			else
 				uninstall();
-		}
+		} else install();
 	}
 
 	return 0;
