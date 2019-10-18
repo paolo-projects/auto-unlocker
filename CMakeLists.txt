@@ -60,6 +60,10 @@ add_executable(Unlocker ${SOURCE_FILES})
 set_target_properties(Unlocker PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS ON)
 set_target_properties (Unlocker PROPERTIES COMPILE_DEFINITIONS BUILDER_STATIC_DEFINE)
 
+if(LINUX)
+	target_link_libraries (Unlocker -lpthread)
+endif()
+
 target_link_libraries (Unlocker "${ZLIB_LIBRARIES}")
 target_link_libraries (Unlocker "${CURL_LIBRARIES}")
 target_link_libraries (Unlocker "${LibArchive_LIBRARIES}")

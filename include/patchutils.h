@@ -78,6 +78,7 @@ namespace Patcher
 	std::optional<unsigned long long> searchForLastOffset(const std::vector<char>& memstream, const std::vector<char>& sequence);
 	std::optional<unsigned long long> searchForOffset(std::fstream& stream, const std::vector<char>& sequence, unsigned long long from = 0);
 	std::optional<unsigned long long> searchForLastOffset(std::fstream& stream, const std::vector<char>& sequence);
+	std::vector<char> readFile(std::fstream& stream);
 	bool cmpcarr(const char* c1, const char* c2, size_t len);
 	void printkey(int i, unsigned long long offset, const smc_key_struct& smc_key, const std::vector<char>& smc_data);
 

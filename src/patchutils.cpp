@@ -69,21 +69,7 @@ std::optional<unsigned long long> Patcher::searchForLastOffset(const std::vector
 
 std::optional<unsigned long long> Patcher::searchForOffset(std::fstream& stream, const std::vector<char>& sequence, unsigned long long from)
 {
-	//FIXME: it's probably better to reuse the same memory stream to avoid reading multiple times from HD
-	stream.clear();
-	stream.seekg(std::ios::beg);
-
-	std::vector<char> memFile;
-
-	{
-		std::array<char, FREAD_BUF_SIZE> buffer{};
-		while (!stream.eof())
-		{
-			stream.read(buffer.data(), buffer.size());
-			size_t readBytes = stream.gcount();
-			memFile.insert(memFile.end(), buffer.begin(), buffer.end());
-		}
-	}
+	std::vector<char> memFile = readFile(stream);
 
 	if (from >= memFile.size() - sequence.size())
 		return {};
@@ -97,26 +83,31 @@ std::optional<unsigned long long> Patcher::searchForOffset(std::fstream& stream,
 
 std::optional<unsigned long long> Patcher::searchForLastOffset(std::fstream& stream, const std::vector<char>& sequence)
 {
-	stream.clear();
-	stream.seekg(std::ios::beg);
-
-	std::vector<char> memFile;
-
-	{
-		std::array<char, FREAD_BUF_SIZE> buffer{};
-		while (!stream.eof())
-		{
-			stream.read(buffer.data(), buffer.size());
-			size_t readBytes = stream.gcount();
-			memFile.insert(memFile.end(), buffer.begin(), buffer.end());
-		}
-	}
+	std::vector<char> memFile = readFile(stream);
 
 	auto sRes = std::find_end(memFile.begin(), memFile.end(), sequence.begin(), sequence.end());
 	if (sRes != memFile.end())
 		return (sRes - memFile.begin());
 	else
 		return {};
+}
+
+std::vector<char> Patcher::readFile(std::fstream& stream)
+{
+	std::vector<char> memFile;
+
+	stream.clear();
+	stream.seekg(std::ios::beg);
+
+	std::array<char, FREAD_BUF_SIZE> buffer{};
+	while (!stream.eof())
+	{
+		stream.read(buffer.data(), buffer.size());
+		size_t readBytes = stream.gcount();
+		memFile.insert(memFile.end(), buffer.begin(), buffer.begin()+readBytes);
+	}
+	
+	return memFile;
 }
 
 std::string Patcher::hexRepresentation(std::string bin)
@@ -206,17 +197,7 @@ void Patcher::patchSMC(fs::path name, bool isSharedObj)
 	char adr_key[] = ADR_KEY;
 
 	// Load up whole file into memory
-	std::vector<char> memFile;
-
-	{
-		std::array<char, FREAD_BUF_SIZE> buffer{};
-		while (!i_file.eof())
-		{
-			i_file.read(buffer.data(), buffer.size());
-			size_t readBytes = i_file.gcount();
-			memFile.insert(memFile.end(), buffer.begin(), buffer.end());
-		}
-	}
+	std::vector<char> memFile = readFile(i_file);
 
 	// Find the vSMC headers
 	auto res = searchForOffset(memFile, makeVector(smc_header_v0, SMC_HEADER_V0_SZ));
@@ -439,17 +420,7 @@ void Patcher::patchBase(fs::path name)
 	// Entry to search for in GOS table
 	// Should work for Workstation 12 - 15...
 
-	std::vector<char> memFile;
-
-	{
-		std::array<char, FREAD_BUF_SIZE> buffer{};
-		while (!file.eof())
-		{
-			file.read(buffer.data(), buffer.size());
-			size_t readBytes = file.gcount();
-			memFile.insert(memFile.end(), buffer.begin(), buffer.end());
-		}
-	}
+	std::vector<char> memFile = readFile(file);
 	/* REGEX WAY --- Seems to not work
 	std::regex darwin = std::regex(DARWIN_REGEX);
 	std::string buf;
@@ -611,7 +582,7 @@ void Patcher::patchElf(std::fstream& file, long long oldoffset, long long newoff
 					towr.Q1 = r_offset;
 					towr.Q2 = r_info;
 					towr.q3 = r_addend;
-					file.write(reinterpret_cast<char*>(&towr), sizeof(towr));
+					file.write(reinterpret_cast<char*>(&towr), sizeof(QQq));
 					logd("Relocation modified at: " + hexRepresentation(e_sh_offset + e_sh_entsize * j));
 				}
 			}

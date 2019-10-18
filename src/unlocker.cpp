@@ -466,7 +466,7 @@ void stopServices()
 			ServiceStopper::StopService_s(service);
 			logd("Service \"" + service + "\" stopped successfully.");
 		}
-		catch (const ServiceStopper::ServiceStopException ex)
+		catch (const ServiceStopper::ServiceStopException& ex)
 		{
 			logerr("Couldn't stop service \"" + service + "\", " + std::string(ex.what()));
 		}
@@ -476,10 +476,16 @@ void stopServices()
 	auto procList = std::list<std::string> VM_KILL_PROCESSES;
 	for (auto process : procList)
 	{
-		if (ServiceStopper::KillProcess(process))
-			logd("Process \"" + process + "\" killed successfully.");
-		else
-			logerr("Could not kill process \"" + process + "\".");
+		try {
+			if (ServiceStopper::KillProcess(process))
+				logd("Process \"" + process + "\" killed successfully.");
+			else
+				logerr("Could not kill process \"" + process + "\".");
+		}
+		catch (const ServiceStopper::ServiceStopException & ex)
+		{
+			logerr(ex.what());
+		}
 	}
 #endif
 }
