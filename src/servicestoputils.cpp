@@ -494,7 +494,8 @@ bool ServiceStopper::KillProcess(std::string procName)
 		::GetExitCodeProcess(hHandle, &dwExitCode);
 		return ::TerminateProcess(hHandle, dwExitCode);
 	}
-	else throw ServiceStopException("Couldn't kill %s, process not found.", procName.c_str());
+	// There is no need to inform the user that the process cannot be killed if it is the VMware Player version or it not running.
+	//else throw ServiceStopException("Couldn't kill %s, process not found.", procName.c_str());
 #endif
 	return false;
 }
