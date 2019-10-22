@@ -116,7 +116,8 @@ int main(int argc, const char* argv[])
 		} else install();
 	}
 
-	system("pause");
+	logd("Press enter to quit.");
+	getc(stdin);
 
 	return 0;
 }
