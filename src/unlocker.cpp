@@ -116,6 +116,8 @@ int main(int argc, const char* argv[])
 		} else install();
 	}
 
+	system("pause");
+
 	return 0;
 }
 
@@ -468,7 +470,8 @@ void stopServices()
 		}
 		catch (const ServiceStopper::ServiceStopException& ex)
 		{
-			logerr("Couldn't stop service \"" + service + "\", " + std::string(ex.what()));
+			// There is no need to inform the user that the service cannot be stopped if that service does not exist in the current version.
+			//logerr("Couldn't stop service \"" + service + "\", " + std::string(ex.what()));
 		}
 
 	}
@@ -500,10 +503,12 @@ void restartServices()
 		try
 		{
 			ServiceStopper::StartService_s(*it);
+			logd("Service \"" + *it + "\" started successfully.");
 		}
 		catch (const ServiceStopper::ServiceStopException & ex)
 		{
-			logerr("Couldn't start service " + *it);
+			// There is no need to inform the user that the service cannot be started if that service does not exist in the current version.
+			//logerr("Couldn't start service " + *it);
 		}
 	}
 #endif

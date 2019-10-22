@@ -64,9 +64,9 @@ if(LINUX)
 	target_link_libraries (Unlocker -lpthread)
 endif()
 
-target_link_libraries (Unlocker "${ZLIB_LIBRARIES}")
-target_link_libraries (Unlocker "${CURL_LIBRARIES}")
-target_link_libraries (Unlocker "${LibArchive_LIBRARIES}")
+target_link_libraries (Unlocker ${ZLIB_LIBRARIES})
+target_link_libraries (Unlocker ${CURL_LIBRARIES})
+target_link_libraries (Unlocker ${LibArchive_LIBRARIES})
 
 if(MSVC)
 	target_link_libraries (Unlocker "ws2_32.lib" "Wldap32.lib")
