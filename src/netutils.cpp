@@ -3,7 +3,7 @@
 /**
 	Writes data received from Curl to a stream
 */
-size_t write_data_file(char* ptr, size_t size, size_t nmemb, void* stream)
+size_t Curl::write_data_file(char* ptr, size_t size, size_t nmemb, void* stream)
 {
 	std::iostream* fstr = static_cast<std::iostream*>(stream);
 	size_t bytes = size * nmemb;
@@ -15,7 +15,7 @@ static double dled = 0.0;
 static double dltot = 0.0;
 static bool progressrun = false;
 
-void updateProgress()
+void Curl::updateProgress()
 {
 	while (progressrun)
 	{
@@ -29,14 +29,14 @@ void updateProgress()
 	}
 }
 
-int progress_callback(void* clientp, double dltotal, double dlnow, double ultotal, double ulnow)
+int Curl::progress_callback(void* clientp, double dltotal, double dlnow, double ultotal, double ulnow)
 {
 	dled = dlnow;
 	dltot = dltotal;
 	return 0;
 }
 
-CURLcode curlDownload(std::string url, std::string fileName)
+CURLcode Curl::curlDownload(std::string url, std::string fileName)
 {
 	CURL* curl = curl_easy_init();
 	if (curl)
@@ -79,7 +79,7 @@ CURLcode curlDownload(std::string url, std::string fileName)
 	else return CURLE_FAILED_INIT;
 }
 
-CURLcode curlGet(std::string url, std::string& output)
+CURLcode Curl::curlGet(std::string url, std::string& output)
 {
 	CURL* curl = curl_easy_init();
 	if (curl)

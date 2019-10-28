@@ -5,7 +5,7 @@ namespace fs = std::filesystem;
 /**
 	Helper function to extract a file using filesystem::path and std::string
 */
-bool extract_s(fs::path from, std::string filename, fs::path to)
+bool Archive::extract_s(fs::path from, std::string filename, fs::path to)
 {
 	std::string from_s = from.string();
 	std::string to_s = to.string();
@@ -15,7 +15,7 @@ bool extract_s(fs::path from, std::string filename, fs::path to)
 	return extract(from_c, filename.c_str(), to_c);
 }
 
-int copy_data(struct archive* ar, struct archive* aw)
+int Archive::copy_data(struct archive* ar, struct archive* aw)
 {
 	int r;
 	const void* buff;
@@ -39,7 +39,7 @@ int copy_data(struct archive* ar, struct archive* aw)
 /**
 	Extract from archive "from", the file "filename" into path "to" (filename has to be included here too)
 */
-bool extract(const char* from, const char* filename, const char* to)
+bool Archive::extract(const char* from, const char* filename, const char* to)
 {
 	struct archive* a;
 	struct archive* ext;

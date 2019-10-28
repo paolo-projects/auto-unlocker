@@ -51,6 +51,9 @@ set (SOURCE_FILES src/unlocker.cpp /
 
 IF (MSVC)
 	IF (UNLOCKER_STATIC_LIBS_WIN)
+		# Preprocessor definitions needed to avoid name mangling when statically importing libs on MSVC compiler
+		# Name mangling is needed if libraries are built dynamically with MSVC
+		# Should not be an issue with other compilers
 		add_compile_definitions( "CURL_STATICLIB" "LIBARCHIVE_STATIC")
 	ENDIF()
 ENDIF (MSVC)
@@ -58,7 +61,6 @@ ENDIF (MSVC)
 add_executable(Unlocker ${SOURCE_FILES})
 
 set_target_properties(Unlocker PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS ON)
-set_target_properties (Unlocker PROPERTIES COMPILE_DEFINITIONS BUILDER_STATIC_DEFINE)
 
 if(LINUX)
 	target_link_libraries (Unlocker -lpthread)
@@ -68,8 +70,8 @@ target_link_libraries (Unlocker ${ZLIB_LIBRARIES})
 target_link_libraries (Unlocker ${CURL_LIBRARIES})
 target_link_libraries (Unlocker ${LibArchive_LIBRARIES})
 
-if(MSVC)
-	target_link_libraries (Unlocker "ws2_32.lib" "Wldap32.lib")
+if(WIN32)
+	target_link_libraries (Unlocker ws2_32 Wldap32)
 endif()
 
 # Amend manifest to tell Windows that the app needs admin privileges

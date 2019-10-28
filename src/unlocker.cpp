@@ -613,7 +613,7 @@ void downloadTools(std::string path)
 	std::string url = FUSION_BASE_URL;
 
 	std::string releasesList;
-	curlGet(url, releasesList); // get the releases HTML page
+	Curl::curlGet(url, releasesList); // get the releases HTML page
 
 	VersionParser versionParser(releasesList); // parse HTML page to version numbers
 
@@ -633,7 +633,7 @@ void downloadTools(std::string path)
 		std::string versionurl = url + version + "/";
 		std::string versionhtml;
 
-		curlGet(versionurl, versionhtml);
+		Curl::curlGet(versionurl, versionhtml);
 
 		BuildsParser builds(versionhtml); // parse the builds in the page
 
@@ -648,14 +648,13 @@ void downloadTools(std::string path)
 			std::string toolspre15_diskpath = (temppath / FUSION_DEF_PRE15_TOOLS_NAME).string();
 
 
-			bool toolsAvailable = (curlDownload(toolsurl, tools_diskpath) == CURLE_OK);
-			toolsAvailable &= (curlDownload(tools_pre15_url, toolspre15_diskpath) == CURLE_OK);
+			bool toolsAvailable = (Curl::curlDownload(toolsurl, tools_diskpath) == CURLE_OK);
+			toolsAvailable &= (Curl::curlDownload(tools_pre15_url, toolspre15_diskpath) == CURLE_OK);
 
 			if (toolsAvailable) // if tools were successfully downloaded, extract them to destination folder
 			{
-				//TODO: extract zips from tar files, and then darwin.iso and darwinPre15.iso from zip file to destination
-				success = extract_s(temppath / FUSION_DEF_TOOLS_NAME, FUSION_DEF_TOOLS_ZIP, temppath / FUSION_DEF_TOOLS_ZIP);
-				success &= extract_s(temppath / FUSION_DEF_PRE15_TOOLS_NAME, FUSION_DEF_PRE15_TOOLS_ZIP, temppath / FUSION_DEF_PRE15_TOOLS_ZIP);
+				success = Archive::extract_s(temppath / FUSION_DEF_TOOLS_NAME, FUSION_DEF_TOOLS_ZIP, temppath / FUSION_DEF_TOOLS_ZIP);
+				success &= Archive::extract_s(temppath / FUSION_DEF_PRE15_TOOLS_NAME, FUSION_DEF_PRE15_TOOLS_ZIP, temppath / FUSION_DEF_PRE15_TOOLS_ZIP);
 
 				if (!success)
 				{
@@ -663,34 +662,39 @@ void downloadTools(std::string path)
 					continue;
 				}
 
-				success = extract_s(temppath / FUSION_DEF_TOOLS_ZIP, FUSION_TAR_TOOLS_ISO, path + FUSION_ZIP_TOOLS_NAME);
-				success &= extract_s(temppath / FUSION_DEF_PRE15_TOOLS_ZIP, FUSION_TAR_PRE15_TOOLS_ISO, path + FUSION_ZIP_PRE15_TOOLS_NAME);
-
-				if (!success)
-				{
-					logerr("Couldn't extract tools from zip files");
-					continue;
-				}
+				success = Archive::extract_s(temppath / FUSION_DEF_TOOLS_ZIP, FUSION_TAR_TOOLS_ISO, path + FUSION_ZIP_TOOLS_NAME);
+				success &= Archive::extract_s(temppath / FUSION_DEF_PRE15_TOOLS_ZIP, FUSION_TAR_PRE15_TOOLS_ISO, path + FUSION_ZIP_PRE15_TOOLS_NAME);
 
 				// Cleanup zips
 				fs::remove(temppath / FUSION_DEF_TOOLS_ZIP);
 				fs::remove(temppath / FUSION_DEF_PRE15_TOOLS_ZIP);
 
-				success = true;
-				break;
+				if (!success)
+				{
+					logerr("Couldn't extract tools from zip files");
+				}
+				else
+				{
+					// Cleanup tars
+					fs::remove(temppath / FUSION_DEF_TOOLS_NAME);
+					fs::remove(temppath / FUSION_DEF_PRE15_TOOLS_NAME);
+
+					success = true;
+					break;
+				}
 			}
 			else {
 				// No tools available, try getting them from core fusion file
 				std::string coreurl = buildurl + FUSION_DEF_CORE_LOC;
 				std::string core_diskpath = (temppath / FUSION_DEF_CORE_NAME).string();
 				
-				if (curlDownload(coreurl, core_diskpath) == CURLE_OK) // If the core package was successfully downloaded, extract the tools from it
+				if (Curl::curlDownload(coreurl, core_diskpath) == CURLE_OK) // If the core package was successfully downloaded, extract the tools from it
 				{
 					logd("Extracting from .tar to temp folder ...");
 					
 					fs::path temppath = fs::temp_directory_path();
 
-					success = extract_s(temppath/FUSION_DEF_CORE_NAME, FUSION_DEF_CORE_NAME_ZIP, temppath/FUSION_DEF_CORE_NAME_ZIP);
+					success = Archive::extract_s(temppath/FUSION_DEF_CORE_NAME, FUSION_DEF_CORE_NAME_ZIP, temppath/FUSION_DEF_CORE_NAME_ZIP);
 					if (!success) {
 						logerr("Couldn't extract from the tar file");
 						// Error in the tar file, try the next version number
@@ -699,8 +703,8 @@ void downloadTools(std::string path)
 
 					logd("Extracting from .zip to destination folder ...");
 
-					success = extract_s(temppath / FUSION_DEF_CORE_NAME_ZIP, FUSION_ZIP_TOOLS_ISO, path + FUSION_ZIP_TOOLS_NAME);
-					success = extract_s(temppath / FUSION_DEF_CORE_NAME_ZIP, FUSION_ZIP_PRE15_TOOLS_ISO, path + FUSION_ZIP_PRE15_TOOLS_NAME);
+					success = Archive::extract_s(temppath / FUSION_DEF_CORE_NAME_ZIP, FUSION_ZIP_TOOLS_ISO, path + FUSION_ZIP_TOOLS_NAME);
+					success = Archive::extract_s(temppath / FUSION_DEF_CORE_NAME_ZIP, FUSION_ZIP_PRE15_TOOLS_ISO, path + FUSION_ZIP_PRE15_TOOLS_NAME);
 
 					// Cleanup zip file
 					fs::remove(temppath / FUSION_DEF_CORE_NAME_ZIP);
@@ -708,7 +712,12 @@ void downloadTools(std::string path)
 					if (!success)
 						logerr("Couldn't extract from the zip file"); // Error in the zip file, try the next version number
 					else
+					{
+						// Cleanup tar file
+						fs::remove(temppath / FUSION_DEF_CORE_NAME);
+
 						break; // All went good
+					}
 				}
 
 				// Cleanup tar file
