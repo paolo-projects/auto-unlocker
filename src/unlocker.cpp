@@ -68,12 +68,14 @@ void showhelp();
 
 int main(int argc, const char* argv[])
 {
+	std::cout << "auto-unlocker " << PROG_VERSION << std::endl
+		<< std::endl;
 #ifdef __linux__
 	if (geteuid() != 0)
 	{
 		// User not root and not elevated permissions
 		logd("The program is not running as root, the patch may not work properly.");
-		std::cout << "Running the program with sudo is recommended... Do you want to continue? (y/N) ";
+		std::cout << "Running the program with sudo/as root is recommended, in most cases required... Do you want to continue? (y/N) ";
 		char c = getc(stdin);
 		
 		if (c != 'y' && c != 'Y')
@@ -136,7 +138,20 @@ void install()
 	doPatch();
 
 	logd("Downloading tools into \"" + toolsdirectory + "\" directory...");
-	downloadTools(toolsdirectory);
+
+	if (fs::exists(fs::path(".") / TOOLS_DOWNLOAD_FOLDER / FUSION_ZIP_TOOLS_NAME) && fs::exists(fs::path(".") / TOOLS_DOWNLOAD_FOLDER / FUSION_ZIP_PRE15_TOOLS_NAME))
+	{
+		std::cout << "Tools have been found in the executable folder. Do you want to use the existing tools instead of downloading them again?" << std::endl
+			<< "Please check that the existing tools are working and are the most recent ones." << std::endl
+			<< "(Y/n) ";
+
+		char c = getc(stdin);
+
+		if (c != 'y' && c != 'Y')
+			downloadTools(toolsdirectory);
+	}
+	else
+		downloadTools(toolsdirectory);
 
 	logd("Copying tools into program directory...");
 	copyTools(toolsdirectory);
