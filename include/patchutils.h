@@ -1,7 +1,7 @@
 #ifndef PATCHUTILS_H
 #define PATCHUTILS_H
 
-#include <filesystem>
+#include "filesystem.hpp"
 #include <fstream>
 #include <optional>
 #include <sstream>
@@ -12,8 +12,6 @@
 
 #include "debugutils.h"
 #include "config.h"
-
-namespace fs = std::filesystem;
 
 namespace Patcher
 {

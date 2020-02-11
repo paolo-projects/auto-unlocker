@@ -22,7 +22,7 @@
 *************************************************************************************************/
 
 #include <string>
-#include <filesystem>
+#include "filesystem.hpp"
 #include <map>
 
 #include <curl/curl.h>
@@ -48,8 +48,6 @@
 
 #define CHECKRES(x) try{ (x); } catch (const Patcher::PatchException& exc) { logerr(exc.what()); }
 #define KILL(x) (x); exit(1);
-
-namespace fs = std::filesystem;
 
 // Forward declarations
 
@@ -183,7 +181,7 @@ void uninstall()
 	{
 		for (const auto& file : fs::directory_iterator(backup))
 		{
-			if (file.is_regular_file())
+			if (fs::is_regular_file(file))
 			{
 				try
 				{
@@ -192,7 +190,7 @@ void uninstall()
 					else
 						logerr("Error while restoring \"" + file.path().string() + "\".");
 				}
-				catch (std::filesystem::filesystem_error ex)
+				catch (fs::filesystem_error ex)
 				{
 					logerr(ex.what());
 				}
@@ -201,7 +199,7 @@ void uninstall()
 		// Copy contents of backup/x64/
 		for (const auto& file : fs::directory_iterator(backup / "x64"))
 		{
-			if (file.is_regular_file())
+			if (fs::is_regular_file(file))
 			{
 				try
 				{
@@ -210,7 +208,7 @@ void uninstall()
 					else
 						logerr("Error while restoring \"" + file.path().string() + "\".");
 				}
-				catch (std::filesystem::filesystem_error ex)
+				catch (fs::filesystem_error ex)
 				{
 					logerr(ex.what());
 				}
@@ -224,7 +222,7 @@ void uninstall()
 	// Remove darwin*.* from InstallDir
 	for (const auto& file : fs::directory_iterator(vmwareInstallDir))
 	{
-		if (file.is_regular_file())
+		if (fs::is_regular_file(file))
 		{
 			size_t is_drw = file.path().filename().string().find("darwin");
 			if (is_drw != std::string::npos && is_drw == 0)
@@ -260,7 +258,7 @@ void uninstall()
 			else
 				logerr("Error while restoring \"" + (backup / file).string() + "\".");
 		}
-		catch (std::filesystem::filesystem_error ex)
+		catch (fs::filesystem_error ex)
 		{
 			logerr(ex.what());
 		}
@@ -277,7 +275,7 @@ void uninstall()
 				else
 					logerr("Error while restoring \"" + (backup / fs::path(lib).filename()).string() + "\".");
 			}
-			catch (std::filesystem::filesystem_error ex)
+			catch (fs::filesystem_error ex)
 			{
 				logerr(ex.what());
 			}
@@ -288,7 +286,7 @@ void uninstall()
 	// Remove darwin*.* from InstallDir
 	for (const auto& file : fs::directory_iterator(VM_LNX_ISO_DESTPATH))
 	{
-		if (file.is_regular_file())
+		if (fs::is_regular_file(file))
 		{
 			size_t is_drw = file.path().filename().string().find("darwin");
 			if (is_drw != std::string::npos && is_drw == 0)

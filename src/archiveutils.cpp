@@ -1,7 +1,5 @@
 #include "archiveutils.h"
 
-namespace fs = std::filesystem;
-
 /**
 	Helper function to extract a file using filesystem::path and std::string
 */
