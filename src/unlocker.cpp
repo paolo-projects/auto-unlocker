@@ -53,8 +53,8 @@
 
 void preparePatch(fs::path backupPath);
 void doPatch();
-void downloadTools(std::string path);
-void copyTools(std::string toolspath);
+void downloadTools(fs::path path);
+void copyTools(fs::path toolspath);
 void stopServices();
 void restartServices();
 
@@ -116,8 +116,10 @@ int main(int argc, const char* argv[])
 		} else install();
 	}
 
+#ifdef _WIN32
 	logd("Press enter to quit.");
 	getc(stdin);
+#endif
 
 	return 0;
 }
@@ -125,7 +127,7 @@ int main(int argc, const char* argv[])
 void install()
 {
 	// Default output path is ./tools/
-	std::string toolsdirectory = (fs::path(".") / TOOLS_DOWNLOAD_FOLDER / "").string();
+	fs::path toolsdirectory = fs::path(".") / TOOLS_DOWNLOAD_FOLDER;
 	// Default backup path is ./backup/
 	fs::path backup = fs::path(".") / BACKUP_FOLDER;
 
@@ -135,7 +137,7 @@ void install()
 	logd("Patching files...");
 	doPatch();
 
-	logd("Downloading tools into \"" + toolsdirectory + "\" directory...");
+	logd("Downloading tools into \"" + toolsdirectory.string() + "\" directory...");
 
 	if (fs::exists(fs::path(".") / TOOLS_DOWNLOAD_FOLDER / FUSION_ZIP_TOOLS_NAME) && fs::exists(fs::path(".") / TOOLS_DOWNLOAD_FOLDER / FUSION_ZIP_PRE15_TOOLS_NAME))
 	{
@@ -313,7 +315,7 @@ void showhelp()
 // Other methods
 
 // Copy tools to VMWare directory
-void copyTools(std::string toolspath)
+void copyTools(fs::path toolspath)
 {
 #ifdef _WIN32
 	VMWareInfoRetriever vmInfo;
@@ -615,7 +617,7 @@ void preparePatch(fs::path backupPath)
 }
 
 // Download tools into "path"
-void downloadTools(std::string path)
+void downloadTools(fs::path path)
 {
 	fs::path temppath = fs::temp_directory_path(); // extract files in the temp folder first
 
@@ -675,8 +677,8 @@ void downloadTools(std::string path)
 					continue;
 				}
 
-				success = Archive::extract_s(temppath / FUSION_DEF_TOOLS_ZIP, FUSION_TAR_TOOLS_ISO, path + FUSION_ZIP_TOOLS_NAME);
-				success &= Archive::extract_s(temppath / FUSION_DEF_PRE15_TOOLS_ZIP, FUSION_TAR_PRE15_TOOLS_ISO, path + FUSION_ZIP_PRE15_TOOLS_NAME);
+				success = Archive::extract_s(temppath / FUSION_DEF_TOOLS_ZIP, FUSION_TAR_TOOLS_ISO, path / FUSION_ZIP_TOOLS_NAME);
+				success &= Archive::extract_s(temppath / FUSION_DEF_PRE15_TOOLS_ZIP, FUSION_TAR_PRE15_TOOLS_ISO, path / FUSION_ZIP_PRE15_TOOLS_NAME);
 
 				// Cleanup zips
 				fs::remove(temppath / FUSION_DEF_TOOLS_ZIP);
@@ -716,8 +718,8 @@ void downloadTools(std::string path)
 
 					logd("Extracting from .zip to destination folder ...");
 
-					success = Archive::extract_s(temppath / FUSION_DEF_CORE_NAME_ZIP, FUSION_ZIP_TOOLS_ISO, path + FUSION_ZIP_TOOLS_NAME);
-					success = Archive::extract_s(temppath / FUSION_DEF_CORE_NAME_ZIP, FUSION_ZIP_PRE15_TOOLS_ISO, path + FUSION_ZIP_PRE15_TOOLS_NAME);
+					success = Archive::extract_s(temppath / FUSION_DEF_CORE_NAME_ZIP, FUSION_ZIP_TOOLS_ISO, path / FUSION_ZIP_TOOLS_NAME);
+					success = Archive::extract_s(temppath / FUSION_DEF_CORE_NAME_ZIP, FUSION_ZIP_PRE15_TOOLS_ISO, path / FUSION_ZIP_PRE15_TOOLS_NAME);
 
 					// Cleanup zip file
 					fs::remove(temppath / FUSION_DEF_CORE_NAME_ZIP);

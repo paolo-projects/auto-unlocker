@@ -7,7 +7,7 @@
 */
 
 // Program options
-#define PROG_VERSION "v1.1"
+#define PROG_VERSION "v1.1.1"
 
 // Install - Default option
 #define INSTALL_OPTION "--install" 
