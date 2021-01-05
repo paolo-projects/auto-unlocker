@@ -88,3 +88,14 @@ IF (MSVC)
 	ENDIF()
 ENDIF(MSVC)
 
+set (TEST_SOURCES tests/test_patch.cpp /
+				src/debugutils.cpp /
+				src/patchutils.cpp /
+				)
+
+add_executable( TestPatch ${TEST_SOURCES} )
+
+set_target_properties( TestPatch PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS ON)
+
+enable_testing()
+add_test(NAME TestPatchTest COMMAND TestPatch "${PROJECT_SOURCE_DIR}")

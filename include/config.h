@@ -7,7 +7,7 @@
 */
 
 // Program options
-#define PROG_VERSION "v1.1.1"
+#define PROG_VERSION "v1.1.2"
 
 // Install - Default option
 #define INSTALL_OPTION "--install" 
@@ -58,7 +58,7 @@
 #define HKEY_QUERY_VALUE_PRODUCTVERSION "ProductVersion"
 
 // Windows services to stop
-#define VM_KILL_SERVICES {"vmware-view-usbd", "VMwareHostd", "VMAuthdService", "VMUSBArbService"}
+#define VM_KILL_SERVICES {"vmware-view-usbd", "VMwareHostd", "VMAuthdService", "VMUSBArbService", "VMnetDHCP", "VMware NAT Service"}
 #define VM_KILL_PROCESSES {"vmware-tray.exe"}
 
 // Files to backup (win) { source, destination }

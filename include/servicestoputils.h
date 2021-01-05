@@ -16,13 +16,13 @@ public:
 	class ServiceStopException : public std::exception
 	{
 	public:
-		ServiceStopException(const char* msg, ...) { 
+		ServiceStopException(const char* msg, ...) {
 			char formatted[512];
 			va_list args;
 			va_start(args, msg);
-			sprintf(formatted, msg, args);
+			vsprintf(formatted, msg, args);
 			va_end(args);
-			sprintf(message, "Error: %s", formatted); 
+			sprintf(message, "Error: %s", formatted);
 		}
 		const char* what() const noexcept { return message; }
 	private:

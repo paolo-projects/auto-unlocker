@@ -1,0 +1,7 @@
+﻿/.vs
+/exe
+/out
+CMakeSettings.json
+/testing
+/LIBS
+/debug.log

@@ -39,8 +39,8 @@ void ServiceStopper::StopService_s(std::string serviceName)
 
 	if (schService == NULL)
 	{
-		throw ServiceStopException("OpenService failed (%d)", GetLastError());
 		CloseServiceHandle(schSCManager);
+		throw ServiceStopException("OpenService failed (%d)", GetLastError());
 		return;
 	}
 
@@ -53,14 +53,16 @@ void ServiceStopper::StopService_s(std::string serviceName)
 		sizeof(SERVICE_STATUS_PROCESS),
 		&dwBytesNeeded))
 	{
+		CloseServiceHandle(schService);
+		CloseServiceHandle(schSCManager);
 		throw ServiceStopException("QueryServiceStatusEx failed (%d)", GetLastError());
-		goto stop_cleanup;
 	}
 
 	if (ssp.dwCurrentState == SERVICE_STOPPED)
 	{
+		CloseServiceHandle(schService);
+		CloseServiceHandle(schSCManager);
 		throw ServiceStopException("Service is already stopped.");
-		goto stop_cleanup;
 	}
 
 	// If a stop is pending, wait for it.
@@ -87,20 +89,23 @@ void ServiceStopper::StopService_s(std::string serviceName)
 			sizeof(SERVICE_STATUS_PROCESS),
 			&dwBytesNeeded))
 		{
+			CloseServiceHandle(schService);
+			CloseServiceHandle(schSCManager);
 			throw ServiceStopException("QueryServiceStatusEx failed (%d)", GetLastError());
-			goto stop_cleanup;
 		}
 
 		if (ssp.dwCurrentState == SERVICE_STOPPED)
 		{
+			CloseServiceHandle(schService);
+			CloseServiceHandle(schSCManager);
 			throw ServiceStopException("Service stopped successfully.");
-			goto stop_cleanup;
 		}
 
 		if (GetTickCount64() - dwStartTime > dwTimeout)
 		{
+			CloseServiceHandle(schService);
+			CloseServiceHandle(schSCManager);
 			throw ServiceStopException("Service stop timed out.");
-			goto stop_cleanup;
 		}
 	}
 
@@ -115,8 +120,9 @@ void ServiceStopper::StopService_s(std::string serviceName)
 		SERVICE_CONTROL_STOP,
 		(LPSERVICE_STATUS)&ssp))
 	{
+		CloseServiceHandle(schService);
+		CloseServiceHandle(schSCManager);
 		throw ServiceStopException("ControlService failed (%d)", GetLastError());
-		goto stop_cleanup;
 	}
 
 	// Wait for the service to stop.
@@ -131,8 +137,9 @@ void ServiceStopper::StopService_s(std::string serviceName)
 			sizeof(SERVICE_STATUS_PROCESS),
 			&dwBytesNeeded))
 		{
+			CloseServiceHandle(schService);
+			CloseServiceHandle(schSCManager);
 			throw ServiceStopException("QueryServiceStatusEx failed (%d)", GetLastError());
-			goto stop_cleanup;
 		}
 
 		if (ssp.dwCurrentState == SERVICE_STOPPED)
@@ -140,12 +147,12 @@ void ServiceStopper::StopService_s(std::string serviceName)
 
 		if (GetTickCount64() - dwStartTime > dwTimeout)
 		{
+			CloseServiceHandle(schService);
+			CloseServiceHandle(schSCManager);
 			throw ServiceStopException("Wait timed out");
-			goto stop_cleanup;
 		}
 	}
 
-stop_cleanup:
 	CloseServiceHandle(schService);
 	CloseServiceHandle(schSCManager);
 #endif
