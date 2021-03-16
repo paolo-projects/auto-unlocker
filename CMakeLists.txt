@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
 project (Unlocker)
 
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/modules)
+
 SET(UNLOCKER_STATIC_LIBS_WIN ON CACHE BOOL "Links statically") # Set to OFF for dynamic linking
 
 IF (MSVC)
@@ -26,13 +28,21 @@ endif()
 
 include_directories(${CURL_INCLUDE_DIRS})
 
-find_package(LibArchive REQUIRED)
+#find_package(LibArchive REQUIRED)
 
-if(LibArchive_FOUND)
-	message (STATUS "LibArchive found, version ${LibArchive_VERSION}")
+#if(LibArchive_FOUND)
+#	message (STATUS "LibArchive found, version ${LibArchive_VERSION}")
+#endif()
+
+#include_directories(${LibArchive_INCLUDE_DIRS})
+
+find_package(LibZip REQUIRED)
+
+include_directories(${LIBZIP_INCLUDE_DIRS})
+
+if(LIBZIP_FOUND)
+	message (STATUS "LibZip found")
 endif()
-
-include_directories(${LibArchive_INCLUDE_DIRS})
 
 # main include files
 include_directories ("${PROJECT_SOURCE_DIR}/include")
@@ -47,18 +57,18 @@ set (SOURCE_FILES src/unlocker.cpp /
 				src/installinfoutils.cpp /
 				src/servicestoputils.cpp /
 				src/patchutils.cpp /
-				)
+				src/tar.cpp )
 
 IF (MSVC)
 	IF (UNLOCKER_STATIC_LIBS_WIN)
 		# Preprocessor definitions needed to avoid name mangling when statically importing libs on MSVC compiler
 		# Name mangling is needed if libraries are built dynamically with MSVC
 		# Should not be an issue with other compilers
-		add_compile_definitions( "CURL_STATICLIB" "LIBARCHIVE_STATIC")
+		add_compile_definitions( "CURL_STATICLIB" )
 	ENDIF()
 ENDIF (MSVC)
 
-add_executable(Unlocker ${SOURCE_FILES})
+add_executable(Unlocker ${SOURCE_FILES} )
 
 set_target_properties(Unlocker PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS ON)
 
@@ -68,7 +78,8 @@ endif()
 
 target_link_libraries (Unlocker ${ZLIB_LIBRARIES})
 target_link_libraries (Unlocker ${CURL_LIBRARIES})
-target_link_libraries (Unlocker ${LibArchive_LIBRARIES})
+#target_link_libraries (Unlocker ${LibArchive_LIBRARIES})
+target_link_libraries (Unlocker ${LIBZIP_LIBRARY})
 
 if(WIN32)
 	target_link_libraries (Unlocker ws2_32 Wldap32)
@@ -91,7 +102,7 @@ ENDIF(MSVC)
 set (TEST_SOURCES tests/test_patch.cpp /
 				src/debugutils.cpp /
 				src/patchutils.cpp /
-				)
+				src/tar.cpp )
 
 add_executable( TestPatch ${TEST_SOURCES} )
 

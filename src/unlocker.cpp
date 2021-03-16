@@ -93,6 +93,8 @@ int main(int argc, const char* argv[])
 			showhelp();
 		else if (stricmp(arg, INSTALL_OPTION) == 0)
 			install();
+		else if (stricmp(arg, DOWNLOADONLY_OPTION) == 0)
+			downloadTools(fs::path(".") / TOOLS_DOWNLOAD_FOLDER);
 		else
 		{
 			logd("Unrecognized command.");
@@ -310,6 +312,7 @@ void showhelp()
 		<< "Run the program with one of these options:" << std::endl
 		<< "	--install (default): install the patch" << std::endl
 		<< "	--uninstall: remove the patch" << std::endl
+		<< "	--download-tools: only download the tools" << std::endl
 		<< "	--help: show this help message" << std::endl;
 }
 
@@ -615,7 +618,7 @@ void preparePatch(fs::path backupPath)
 	logerr("OS not supported");
 	exit(1); // Better stop before messing things up
 #endif
-}
+	}
 
 // Download tools into "path"
 void downloadTools(fs::path path)
@@ -669,8 +672,8 @@ void downloadTools(fs::path path)
 
 			if (toolsAvailable) // if tools were successfully downloaded, extract them to destination folder
 			{
-				success = Archive::extract_s(temppath / FUSION_DEF_TOOLS_NAME, FUSION_DEF_TOOLS_ZIP, temppath / FUSION_DEF_TOOLS_ZIP);
-				success &= Archive::extract_s(temppath / FUSION_DEF_PRE15_TOOLS_NAME, FUSION_DEF_PRE15_TOOLS_ZIP, temppath / FUSION_DEF_PRE15_TOOLS_ZIP);
+				success = Archive::extract_tar(temppath / FUSION_DEF_TOOLS_NAME, FUSION_DEF_TOOLS_ZIP, temppath / FUSION_DEF_TOOLS_ZIP);
+				success &= Archive::extract_tar(temppath / FUSION_DEF_PRE15_TOOLS_NAME, FUSION_DEF_PRE15_TOOLS_ZIP, temppath / FUSION_DEF_PRE15_TOOLS_ZIP);
 
 				if (!success)
 				{
@@ -678,8 +681,8 @@ void downloadTools(fs::path path)
 					continue;
 				}
 
-				success = Archive::extract_s(temppath / FUSION_DEF_TOOLS_ZIP, FUSION_TAR_TOOLS_ISO, path / FUSION_ZIP_TOOLS_NAME);
-				success &= Archive::extract_s(temppath / FUSION_DEF_PRE15_TOOLS_ZIP, FUSION_TAR_PRE15_TOOLS_ISO, path / FUSION_ZIP_PRE15_TOOLS_NAME);
+				success = Archive::extract_zip(temppath / FUSION_DEF_TOOLS_ZIP, FUSION_TAR_TOOLS_ISO, path / FUSION_ZIP_TOOLS_NAME);
+				success &= Archive::extract_zip(temppath / FUSION_DEF_PRE15_TOOLS_ZIP, FUSION_TAR_PRE15_TOOLS_ISO, path / FUSION_ZIP_PRE15_TOOLS_NAME);
 
 				// Cleanup zips
 				fs::remove(temppath / FUSION_DEF_TOOLS_ZIP);
@@ -710,7 +713,7 @@ void downloadTools(fs::path path)
 
 					fs::path temppath = fs::temp_directory_path();
 
-					success = Archive::extract_s(temppath / FUSION_DEF_CORE_NAME, FUSION_DEF_CORE_NAME_ZIP, temppath / FUSION_DEF_CORE_NAME_ZIP);
+					success = Archive::extract_tar(temppath / FUSION_DEF_CORE_NAME, FUSION_DEF_CORE_NAME_ZIP, temppath / FUSION_DEF_CORE_NAME_ZIP);
 					if (!success) {
 						logerr("Couldn't extract from the tar file");
 						// Error in the tar file, try the next version number
@@ -719,8 +722,8 @@ void downloadTools(fs::path path)
 
 					logd("Extracting from .zip to destination folder ...");
 
-					success = Archive::extract_s(temppath / FUSION_DEF_CORE_NAME_ZIP, FUSION_ZIP_TOOLS_ISO, path / FUSION_ZIP_TOOLS_NAME);
-					success = Archive::extract_s(temppath / FUSION_DEF_CORE_NAME_ZIP, FUSION_ZIP_PRE15_TOOLS_ISO, path / FUSION_ZIP_PRE15_TOOLS_NAME);
+					success = Archive::extract_zip(temppath / FUSION_DEF_CORE_NAME_ZIP, FUSION_ZIP_TOOLS_ISO, path / FUSION_ZIP_TOOLS_NAME);
+					success = Archive::extract_zip(temppath / FUSION_DEF_CORE_NAME_ZIP, FUSION_ZIP_PRE15_TOOLS_ISO, path / FUSION_ZIP_PRE15_TOOLS_NAME);
 
 					// Cleanup zip file
 					fs::remove(temppath / FUSION_DEF_CORE_NAME_ZIP);

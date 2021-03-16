@@ -7,12 +7,14 @@
 */
 
 // Program options
-#define PROG_VERSION "v1.1.2"
+#define PROG_VERSION "v1.1.3"
 
 // Install - Default option
 #define INSTALL_OPTION "--install" 
 // Uninstall
 #define UNINSTALL_OPTION "--uninstall"
+// Only download tools
+#define DOWNLOADONLY_OPTION "--download-tools"
 // Show help message
 #define HELP_OPTION "--help"
 

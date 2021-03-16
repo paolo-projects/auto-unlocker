@@ -31,6 +31,7 @@ I created the C++ version of this tool to avoid issues between different Python 
 
 * ```--install``` *(Default behavior when called with no arguments)* Installs the patch.
 * ```--uninstall``` Uninstalls the patch. Works only if the patch was previously installed and the *backup* folder is intact
+* ```--download-tools``` Only downloads the tools in the `tools` folder
 * ```--help``` Shows a list of the available options
 
 **I tested the program on Windows with VMware Player 15.0.** I plan to test it on Linux soon, though as of now I don't know if it works there, or with other VMware versions.
@@ -41,9 +42,9 @@ The program can be compiled on Windows with CMake, provided you get or compile t
 The program needs the following libraries:
 
 * libcurl
-* zlib
-* libarchive
+* libzip
 
+The tar extraction is handled internally, while the zip decompression needs the `libzip` library. `libcurl` is used for downloading the tools.
 
 **Windows:** 
 Run *CMake* on the source folder to generate a Visual Studio Project. The CMakeList is set up to compile with static libraries, if you have shared ones change *CMakeLists.txt* file accordingly (**UNLOCKER_STATIC_LIBS_WIN** variable). Point the CMake utility to the proper library/headers paths when prompted or add them to your PATH.

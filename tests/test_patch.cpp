@@ -11,9 +11,12 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include "filesystem.hpp"
 #include "patchutils.h"
 #include "installinfoutils.h"
+#include "tar.h"
 
+void test_tar();
 void do_test_patch();
 void test_failed(bool to_cleanup = true);
 void test_equalness();
@@ -30,6 +33,7 @@ int main(int argc, char** argv)
 		std::cout << "Basepath for test files is: " << basepath_str << "\n";
 	}
 
+	test_tar();
 	do_test_patch();
 	test_equalness();
 	cleanup();
@@ -37,6 +41,12 @@ int main(int argc, char** argv)
 	std::cout << "Done.\n";
 
 	return 0;
+}
+
+void test_tar()
+{
+	Tar tarfile((fs::temp_directory_path() / "com.vmware.fusion.zip.tar").string());
+	tarfile.extract("com.vmware.fusion.zip", (fs::temp_directory_path() / "com.vmware.fusion.zip").string());
 }
 
 void do_test_patch()
