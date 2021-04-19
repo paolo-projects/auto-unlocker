@@ -723,7 +723,7 @@ void downloadTools(fs::path path)
 					logd("Extracting from .zip to destination folder ...");
 
 					success = Archive::extract_zip(temppath / FUSION_DEF_CORE_NAME_ZIP, FUSION_ZIP_TOOLS_ISO, path / FUSION_ZIP_TOOLS_NAME);
-					success = Archive::extract_zip(temppath / FUSION_DEF_CORE_NAME_ZIP, FUSION_ZIP_PRE15_TOOLS_ISO, path / FUSION_ZIP_PRE15_TOOLS_NAME);
+					success &= Archive::extract_zip(temppath / FUSION_DEF_CORE_NAME_ZIP, FUSION_ZIP_PRE15_TOOLS_ISO, path / FUSION_ZIP_PRE15_TOOLS_NAME);
 
 					// Cleanup zip file
 					fs::remove(temppath / FUSION_DEF_CORE_NAME_ZIP);
