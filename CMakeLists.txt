@@ -72,9 +72,8 @@ add_executable(Unlocker ${SOURCE_FILES} )
 
 set_target_properties(Unlocker PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS ON)
 
-if(LINUX)
-	target_link_libraries (Unlocker -lpthread)
-endif()
+find_package(Threads REQUIRED)
+target_link_libraries(Unlocker Threads::Threads)
 
 target_link_libraries (Unlocker ${ZLIB_LIBRARIES})
 target_link_libraries (Unlocker ${CURL_LIBRARIES})
