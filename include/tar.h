@@ -5,6 +5,7 @@
 #include <vector>
 #include <stdexcept>
 #include <cmath>
+#include <algorithm>
 
 
 enum tar_type_flag {
