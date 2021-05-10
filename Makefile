@@ -8,7 +8,7 @@ obj	= $(src:.cpp=.o)
 INCLUDE		= -Iinclude
 CXXFLAGS	= -Wall -std=c++17 $(INCLUDE)
 
-LIBS	+= -lcurl -larchive -lpthread -lstdc++fs
+LIBS	+= -lcurl -lzip -lpthread -lstdc++fs
 
 auto-unlocker:	$(obj)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
