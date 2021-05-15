@@ -11,13 +11,25 @@ size_t Curl::write_data_file(char* ptr, size_t size, size_t nmemb, void* stream)
 	return bytes;
 }
 
+constexpr double mBytesProgressUpdateDelta = 0.1; // 100 kB
+static double mBytesDownloadedLastTime = 0.0;
+
 int Curl::progress_callback(void* clientp, double dltotal, double dlnow, double ultotal, double ulnow)
 {
 	if (dltotal > 0)
 	{
 		double mBytesTotal = dltotal / 1024 / 1024;
 		double mBytesNow = dlnow / 1024 / 1024;
+
+		if ((mBytesNow - mBytesDownloadedLastTime) < mBytesProgressUpdateDelta)
+		{
+			// Don't update too frequently.
+			return 0;
+		}
+
 		std::cout << "Download progress: " << (std::min)(100, (std::max)(0, int(dlnow * 100 / dltotal))) << " %, " << std::fixed << std::setprecision(2) << mBytesNow << " MB / " << mBytesTotal << " MB                    \r";
+
+		mBytesDownloadedLastTime = mBytesNow;
 	}
 	return 0;
 }
@@ -47,6 +59,7 @@ CURLcode Curl::curlDownload(std::string url, std::string fileName)
 		curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, progress_callback);
 		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0);
 		/* get it! */
+		mBytesDownloadedLastTime = 0.0;
 		CURLcode res = curl_easy_perform(curl);
 		out_file.close();
 
