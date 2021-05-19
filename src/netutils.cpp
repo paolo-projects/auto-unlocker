@@ -11,28 +11,26 @@ size_t Curl::write_data_file(char* ptr, size_t size, size_t nmemb, void* stream)
 	return bytes;
 }
 
-static double dled = 0.0;
-static double dltot = 0.0;
-static bool progressrun = false;
-
-void Curl::updateProgress()
-{
-	while (progressrun)
-	{
-		if (dltot > 0)
-		{
-			double mBytesTotal = dltot / 1024 / 1024;
-			double mBytesNow = dled / 1024 / 1024;
-			std::cout << "Download progress: " << (std::min)(100, (std::max)(0, int(dled * 100 / dltot))) << " %, " << std::fixed << std::setprecision(2) << mBytesNow << " MB / " << mBytesTotal << " MB                    \r";
-		}
-		std::this_thread::sleep_for(std::chrono::seconds(1));
-	}
-}
+constexpr double mBytesProgressUpdateDelta = 0.1; // 100 kB
+static double mBytesDownloadedLastTime = 0.0;
 
 int Curl::progress_callback(void* clientp, double dltotal, double dlnow, double ultotal, double ulnow)
 {
-	dled = dlnow;
-	dltot = dltotal;
+	if (dltotal > 0)
+	{
+		double mBytesTotal = dltotal / 1024 / 1024;
+		double mBytesNow = dlnow / 1024 / 1024;
+
+		if ((mBytesNow - mBytesDownloadedLastTime) < mBytesProgressUpdateDelta)
+		{
+			// Don't update too frequently.
+			return 0;
+		}
+
+		std::cout << "Download progress: " << (std::min)(100, (std::max)(0, int(dlnow * 100 / dltotal))) << " %, " << std::fixed << std::setprecision(2) << mBytesNow << " MB / " << mBytesTotal << " MB                    \r" << std::flush;
+
+		mBytesDownloadedLastTime = mBytesNow;
+	}
 	return 0;
 }
 
@@ -61,13 +59,8 @@ CURLcode Curl::curlDownload(std::string url, std::string fileName)
 		curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, progress_callback);
 		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0);
 		/* get it! */
-		dltot = 0.0;
-		dled = 0.0;
-		progressrun = true;
-		std::thread progressthread(updateProgress);
-		progressthread.detach();
+		mBytesDownloadedLastTime = 0.0;
 		CURLcode res = curl_easy_perform(curl);
-		progressrun = false;
 		out_file.close();
 
 		std::cout << std::endl;
