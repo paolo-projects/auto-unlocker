@@ -27,7 +27,7 @@ int Curl::progress_callback(void* clientp, double dltotal, double dlnow, double 
 			return 0;
 		}
 
-		std::cout << "Download progress: " << (std::min)(100, (std::max)(0, int(dlnow * 100 / dltotal))) << " %, " << std::fixed << std::setprecision(2) << mBytesNow << " MB / " << mBytesTotal << " MB                    \r";
+		std::cout << "Download progress: " << (std::min)(100, (std::max)(0, int(dlnow * 100 / dltotal))) << " %, " << std::fixed << std::setprecision(2) << mBytesNow << " MB / " << mBytesTotal << " MB                    \r" << std::flush;
 
 		mBytesDownloadedLastTime = mBytesNow;
 	}
