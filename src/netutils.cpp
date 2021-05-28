@@ -16,21 +16,18 @@ static double mBytesDownloadedLastTime = 0.0;
 
 int Curl::progress_callback(void* clientp, double dltotal, double dlnow, double ultotal, double ulnow)
 {
-	if (dltotal > 0)
+	double mBytesTotal = dltotal / 1024 / 1024;
+	double mBytesNow = dlnow / 1024 / 1024;
+
+	if ((mBytesNow - mBytesDownloadedLastTime) < mBytesProgressUpdateDelta)
 	{
-		double mBytesTotal = dltotal / 1024 / 1024;
-		double mBytesNow = dlnow / 1024 / 1024;
-
-		if ((mBytesNow - mBytesDownloadedLastTime) < mBytesProgressUpdateDelta)
-		{
-			// Don't update too frequently.
-			return 0;
-		}
-
-		std::cout << "Download progress: " << (std::min)(100, (std::max)(0, int(dlnow * 100 / dltotal))) << " %, " << std::fixed << std::setprecision(2) << mBytesNow << " MB / " << mBytesTotal << " MB                    \r" << std::flush;
-
-		mBytesDownloadedLastTime = mBytesNow;
+		// Don't update too frequently.
+		return 0;
 	}
+
+	std::cout << "Download progress: " << (std::min)(100, (std::max)(0, int(dlnow * 100 / dltotal))) << " %, " << std::fixed << std::setprecision(2) << mBytesNow << " MB / " << mBytesTotal << " MB                    \r" << std::flush;
+
+	mBytesDownloadedLastTime = mBytesNow;
 	return 0;
 }
 
