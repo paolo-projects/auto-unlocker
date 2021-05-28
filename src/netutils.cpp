@@ -11,7 +11,7 @@ size_t Curl::write_data_file(char* ptr, size_t size, size_t nmemb, void* stream)
 	return bytes;
 }
 
-constexpr double mBytesProgressUpdateDelta = 0.0; // 0 B
+constexpr double mBytesProgressUpdateDelta = 0.1; // 100 kB
 static double mBytesDownloadedLastTime = 0.0;
 
 int Curl::progress_callback(void* clientp, double dltotal, double dlnow, double ultotal, double ulnow)
