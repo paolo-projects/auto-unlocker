@@ -1,4 +1,4 @@
-#include "patchutils.h"
+#include "patcher.h"
 
 // Settings for memory and IO related stuff
 #define FREAD_BUF_SIZE 2048 // 2 kB

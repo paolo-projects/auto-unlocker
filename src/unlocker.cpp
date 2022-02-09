@@ -21,147 +21,55 @@
 
 *************************************************************************************************/
 
-#include <string>
-#include "filesystem.hpp"
-#include <map>
-
-#include <curl/curl.h>
-
-#include "config.h"
-#include "netutils.h"
-#include "versionparser.h"
-#include "debugutils.h"
-#include "buildsparser.h"
-#include "archiveutils.h"
-#include "installinfoutils.h"
-#include "servicestoputils.h"
-#include "patchutils.h"
-
-#ifdef __linux__
-#include <unistd.h>
-#include <strings.h>
-
-#define stricmp(a, b) strcasecmp(a, b)
-#endif
-
-#include <stdio.h>
-
-#define CHECKRES(x) try{ (x); } catch (const Patcher::PatchException& exc) { logerr(exc.what()); }
-#define KILL(x) (x); exit(1);
-
-// Forward declarations
-
-void preparePatch(fs::path backupPath);
-void doPatch();
-void downloadTools(fs::path path);
-void copyTools(fs::path toolspath);
-void stopServices();
-void restartServices();
-
-void install();
-void uninstall();
-void showhelp();
+#include "unlocker.h"
 
 // Main function
 
-int main(int argc, const char* argv[])
+void install()
 {
-	std::cout << "auto-unlocker " << PROG_VERSION << std::endl
-		<< std::endl;
-#ifdef __linux__
-	if (geteuid() != 0)
-	{
-		// User not root and not elevated permissions
-		logd("The program is not running as root, the patch may not work properly.");
-		std::cout << "Running the program with sudo/as root is recommended, in most cases required... Do you want to continue? (y/N) ";
-		char c = getc(stdin);
+	try {
+		// Default output path is ./tools/
+		fs::path toolsdirectory = fs::path(".") / TOOLS_DOWNLOAD_FOLDER;
+		// Default backup path is ./backup/
+		fs::path backup = fs::path(".") / BACKUP_FOLDER;
 
-		if (c != 'y' && c != 'Y')
-		{
-			logd("Aborting...");
-			exit(0);
-		}
-	}
-#endif
-	if (argc > 1)
-	{
-		const char* arg = argv[1];
+		logd("Killing services and backing up files...");
+		preparePatch(backup);
 
-		if (stricmp(arg, UNINSTALL_OPTION) == 0)
-			uninstall();
-		else if (stricmp(arg, HELP_OPTION) == 0)
-			showhelp();
-		else if (stricmp(arg, INSTALL_OPTION) == 0)
-			install();
-		else if (stricmp(arg, DOWNLOADONLY_OPTION) == 0)
-			downloadTools(fs::path(".") / TOOLS_DOWNLOAD_FOLDER);
-		else
+		logd("Patching files...");
+		doPatch();
+
+		logd("Downloading tools into \"" + toolsdirectory.string() + "\" directory...");
+
+		if (fs::exists(fs::path(".") / TOOLS_DOWNLOAD_FOLDER / FUSION_ZIP_TOOLS_NAME) && fs::exists(fs::path(".") / TOOLS_DOWNLOAD_FOLDER / FUSION_ZIP_PRE15_TOOLS_NAME))
 		{
-			logd("Unrecognized command.");
-			logd("");
-			showhelp();
-		}
-	}
-	else {
-		fs::path backupFolder = BACKUP_FOLDER;
-		if (fs::exists(backupFolder))
-		{
-			std::cout << "A backup folder has been found. Do you wish to uninstall the previous patch? Type y to uninstall, n to continue with installation." << std::endl
+			std::cout << "Tools have been found in current folder. Do you want to use them or you want do download them again?" << std::endl
+				<< "Please check that the existing tools are working and are the most recent ones." << std::endl
 				<< "(Y/n) ";
 
 			char c = getc(stdin);
 
-			if (c == 'n' || c == 'N')
-				install();
-			else
-				uninstall();
+			if (c != 'y' && c != 'Y')
+			{
+				downloadTools(toolsdirectory);
+			}
 		}
-		else install();
-	}
-
-#ifdef _WIN32
-	logd("Press enter to quit.");
-	getc(stdin);
-#endif
-
-	return 0;
-}
-
-void install()
-{
-	// Default output path is ./tools/
-	fs::path toolsdirectory = fs::path(".") / TOOLS_DOWNLOAD_FOLDER;
-	// Default backup path is ./backup/
-	fs::path backup = fs::path(".") / BACKUP_FOLDER;
-
-	logd("Killing services and backing up files...");
-	preparePatch(backup);
-
-	logd("Patching files...");
-	doPatch();
-
-	logd("Downloading tools into \"" + toolsdirectory.string() + "\" directory...");
-
-	if (fs::exists(fs::path(".") / TOOLS_DOWNLOAD_FOLDER / FUSION_ZIP_TOOLS_NAME) && fs::exists(fs::path(".") / TOOLS_DOWNLOAD_FOLDER / FUSION_ZIP_PRE15_TOOLS_NAME))
-	{
-		std::cout << "Tools have been found in the executable folder. Do you want to use the existing tools instead of downloading them again?" << std::endl
-			<< "Please check that the existing tools are working and are the most recent ones." << std::endl
-			<< "(Y/n) ";
-
-		char c = getc(stdin);
-
-		if (c != 'y' && c != 'Y')
+		else
+		{
 			downloadTools(toolsdirectory);
+		}
+
+		logd("Copying tools into program directory...");
+		copyTools(toolsdirectory);
+
+		restartServices();
+
+		logd("Patch complete.");
 	}
-	else
-		downloadTools(toolsdirectory);
-
-	logd("Copying tools into program directory...");
-	copyTools(toolsdirectory);
-
-	restartServices();
-
-	logd("Patch complete.");
+	catch (const std::exception& exc)
+	{
+		KILL(logerr(std::string(exc.what())));
+	}
 }
 
 void uninstall()
@@ -191,9 +99,13 @@ void uninstall()
 				try
 				{
 					if (fs::copy_file(file.path(), vmwareInstallDir / file.path().filename(), fs::copy_options::overwrite_existing))
+					{
 						logd("File \"" + file.path().string() + "\" restored successfully");
+					}
 					else
+					{
 						logerr("Error while restoring \"" + file.path().string() + "\".");
+					}
 				}
 				catch (fs::filesystem_error ex)
 				{
@@ -209,9 +121,13 @@ void uninstall()
 				try
 				{
 					if (fs::copy_file(file.path(), vmwareInstallDir64 / file.path().filename(), fs::copy_options::overwrite_existing))
+					{
 						logd("File \"" + file.path().string() + "\" restored successfully");
+					}
 					else
+					{
 						logerr("Error while restoring \"" + file.path().string() + "\".");
+					}
 				}
 				catch (fs::filesystem_error ex)
 				{
@@ -231,7 +147,9 @@ void uninstall()
 		{
 			size_t is_drw = file.path().filename().string().find("darwin");
 			if (is_drw != std::string::npos && is_drw == 0)
+			{
 				fs::remove(file);
+			}
 		}
 	}
 
@@ -259,9 +177,13 @@ void uninstall()
 		try
 		{
 			if (fs::copy_file(backup / file, vmwareDir / file, fs::copy_options::overwrite_existing))
+			{
 				logd("File \"" + (backup / file).string() + "\" restored successfully");
+			}
 			else
+			{
 				logerr("Error while restoring \"" + (backup / file).string() + "\".");
+			}
 		}
 		catch (fs::filesystem_error ex)
 		{
@@ -276,9 +198,13 @@ void uninstall()
 			try
 			{
 				if (fs::copy_file(backup / fs::path(lib).filename(), fs::path(lib), fs::copy_options::overwrite_existing))
+				{
 					logd("File \"" + (backup / fs::path(lib).filename()).string() + "\" restored successfully");
+				}
 				else
+				{
 					logerr("Error while restoring \"" + (backup / fs::path(lib).filename()).string() + "\".");
+				}
 			}
 			catch (fs::filesystem_error ex)
 			{
@@ -295,7 +221,9 @@ void uninstall()
 		{
 			size_t is_drw = file.path().filename().string().find("darwin");
 			if (is_drw != std::string::npos && is_drw == 0)
+			{
 				fs::remove(file);
+			}
 		}
 	}
 
@@ -321,62 +249,45 @@ void showhelp()
 // Copy tools to VMWare directory
 void copyTools(fs::path toolspath)
 {
+	fs::path toolsfrom = toolspath;
 #ifdef _WIN32
 	VMWareInfoRetriever vmInfo;
 	fs::path copyto = vmInfo.getInstallPath();
-	fs::path toolsfrom = toolspath;
-
-	try
-	{
-		if (fs::copy_file(toolsfrom / FUSION_ZIP_TOOLS_NAME, copyto / FUSION_ZIP_TOOLS_NAME))
-			logd("File \"" + (toolsfrom / FUSION_ZIP_TOOLS_NAME).string() + "\" copy done.");
-		else
-			logerr("File \"" + (toolsfrom / FUSION_ZIP_TOOLS_NAME).string() + "\" could not be copied.");
-	}
-	catch (const std::exception& e)
-	{
-		logerr(e.what());
-	}
-
-	try
-	{
-		if (fs::copy_file(toolsfrom / FUSION_ZIP_PRE15_TOOLS_NAME, copyto / FUSION_ZIP_PRE15_TOOLS_NAME))
-			logd("File \"" + (toolsfrom / FUSION_ZIP_PRE15_TOOLS_NAME).string() + "\" copy done.");
-		else
-			logerr("File \"" + (toolsfrom / FUSION_ZIP_PRE15_TOOLS_NAME).string() + "\" could not be copied.");
-	}
-	catch (const std::exception& e)
-	{
-		logerr(e.what());
-	}
-#elif defined (__linux__)
+#elif defined(__linux__)
 	fs::path copyto = VM_LNX_ISO_DESTPATH;
-	fs::path toolsfrom = toolspath;
-
-	try
-	{
-		if (fs::copy_file(toolsfrom / FUSION_ZIP_TOOLS_NAME, copyto / FUSION_ZIP_TOOLS_NAME))
-			logd("File \"" + (toolsfrom / FUSION_ZIP_TOOLS_NAME).string() + "\" copy done.");
-		else
-			logerr("File \"" + (toolsfrom / FUSION_ZIP_TOOLS_NAME).string() + "\" could not be copied.");
-	}
-	catch (const std::exception& e)
-	{
-		logerr(e.what());
-	}
-
-	try
-	{
-		if (fs::copy_file(toolsfrom / FUSION_ZIP_PRE15_TOOLS_NAME, copyto / FUSION_ZIP_PRE15_TOOLS_NAME))
-			logd("File \"" + (toolsfrom / FUSION_ZIP_PRE15_TOOLS_NAME).string() + "\" copy done.");
-		else
-			logerr("File \"" + (toolsfrom / FUSION_ZIP_PRE15_TOOLS_NAME).string() + "\" could not be copied.");
-	}
-	catch (const std::exception& e)
-	{
-		logerr(e.what());
-	}
 #endif
+
+	try
+	{
+		if (fs::copy_file(toolsfrom / FUSION_ZIP_TOOLS_NAME, copyto / FUSION_ZIP_TOOLS_NAME, fs::copy_options::overwrite_existing))
+		{
+			logd("File \"" + (toolsfrom / FUSION_ZIP_TOOLS_NAME).string() + "\" copy done.");
+		}
+		else
+		{
+			logerr("File \"" + (toolsfrom / FUSION_ZIP_TOOLS_NAME).string() + "\" could not be copied.");
+		}
+	}
+	catch (const std::exception& e)
+	{
+		logerr(e.what());
+	}
+
+	try
+	{
+		if (fs::copy_file(toolsfrom / FUSION_ZIP_PRE15_TOOLS_NAME, copyto / FUSION_ZIP_PRE15_TOOLS_NAME, fs::copy_options::overwrite_existing))
+		{
+			logd("File \"" + (toolsfrom / FUSION_ZIP_PRE15_TOOLS_NAME).string() + "\" copy done.");
+		}
+		else
+		{
+			logerr("File \"" + (toolsfrom / FUSION_ZIP_PRE15_TOOLS_NAME).string() + "\" could not be copied.");
+		}
+	}
+	catch (const std::exception& e)
+	{
+		logerr(e.what());
+	}
 }
 
 // Actual patch code
@@ -397,15 +308,15 @@ void doPatch()
 
 	if (!fs::exists(vmx))
 	{
-		KILL(logerr("Vmx file not found"));
+		throw std::runtime_error("Vmx file not found");
 	}
 	if (!fs::exists(vmx_debug))
 	{
-		KILL(logerr("Vmx-debug file not found"));
+		throw std::runtime_error("Vmx-debug file not found");
 	}
 	if (!fs::exists(vmwarebase))
 	{
-		KILL(logerr("vmwarebase.dll file not found"));
+		throw std::runtime_error("vmwarebase.dll file not found");
 	}
 
 	logd("File: " + vmx.filename().string());
@@ -445,15 +356,15 @@ void doPatch()
 
 	if (!fs::exists(vmx))
 	{
-		KILL(logerr("Vmx file not found"));
+		throw std::runtime_error(logerr("Vmx file not found");
 	}
 	if (!fs::exists(vmx_debug))
 	{
-		KILL(logerr("Vmx-debug file not found"));
+		throw std::runtime_error(logerr("Vmx-debug file not found");
 	}
 	if (!fs::exists(vmlib))
 	{
-		KILL(logerr("Vmlib file not found"));
+		throw std::runtime_error(logerr("Vmlib file not found");
 	}
 
 	logd("File: " + vmx.filename().string());
@@ -501,9 +412,13 @@ void stopServices()
 	{
 		try {
 			if (ServiceStopper::KillProcess(process))
+			{
 				logd("Process \"" + process + "\" killed successfully.");
+			}
 			else
+			{
 				logerr("Could not kill process \"" + process + "\".");
+			}
 		}
 		catch (const ServiceStopper::ServiceStopException& ex)
 		{
@@ -557,9 +472,13 @@ void preparePatch(fs::path backupPath)
 		try
 		{
 			if (fs::copy_file(fPath, destpath / fPath.filename(), fs::copy_options::overwrite_existing))
+			{
 				logd("File \"" + fPath.string() + "\" backup done.");
+			}
 			else
+			{
 				logerr("File \"" + fPath.string() + "\" could not be copied.");
+			}
 		}
 		catch (const std::exception& e)
 		{
@@ -567,7 +486,6 @@ void preparePatch(fs::path backupPath)
 		}
 	}
 #elif defined (__linux__)
-	//TODO: linux code here
 	// Backup files
 	std::string filesToBackup[] = VM_LNX_BACKUP_FILES;
 	fs::path destpath = backupPath;
@@ -581,9 +499,13 @@ void preparePatch(fs::path backupPath)
 		try
 		{
 			if (fs::copy_file(fPath, destpath / fPath.filename(), fs::copy_options::overwrite_existing))
+			{
 				logd("File \"" + fPath.string() + "\" backup done.");
+			}
 			else
+			{
 				logerr("File \"" + fPath.string() + "\" could not be copied.");
+			}
 		}
 		catch (const std::exception& e)
 		{
@@ -601,9 +523,13 @@ void preparePatch(fs::path backupPath)
 			try
 			{
 				if (fs::copy_file(libpath, destpath / libpath.filename(), fs::copy_options::overwrite_existing))
+				{
 					logd("File \"" + libpath.string() + "\" backup done.");
+				}
 				else
+				{
 					logerr("File \"" + libpath.string() + "\" could not be copied.");
+				}
 
 				break;
 			}
@@ -614,32 +540,33 @@ void preparePatch(fs::path backupPath)
 		}
 	}
 #else
-	// Either the compiler macros are not working or the the tool is trying to be compiled on an OS where it's not meant to be compiled
+	// Either the compiler definitions are not working or the the tool is being compiled on an OS where it's not meant to be compiled
 	logerr("OS not supported");
-	exit(1); // Better stop before messing things up
+	exit(1);
 #endif
-	}
+}
 
 // Download tools into "path"
-void downloadTools(fs::path path)
+bool downloadTools(fs::path path)
 {
+	Network network;
+
 	fs::path temppath = fs::temp_directory_path(); // extract files in the temp folder first
 
 	fs::create_directory(path); // create destination directory if it doesn't exist
 
-	curl_global_init(CURL_GLOBAL_ALL);
-
 	std::string url = FUSION_BASE_URL;
 
 	std::string releasesList;
-	Curl::curlGet(url, releasesList); // get the releases HTML page
+
+	releasesList = network.curlGet(url); // get the releases HTML page
 
 	VersionParser versionParser(releasesList); // parse HTML page to version numbers
 
 	if (versionParser.size() == 0)
 	{
 		logerr("No Fusion versions found in Download url location.");
-		return;
+		return false;
 	}
 
 	bool success = false;
@@ -649,103 +576,11 @@ void downloadTools(fs::path path)
 	{
 		std::string version = it->getVersionText();
 
-		std::string versionurl = url + version + "/";
-		std::string versionhtml;
+		ToolsDownloader downloader(network, FUSION_BASE_URL, version);
 
-		Curl::curlGet(versionurl, versionhtml);
-
-		BuildsParser builds(versionhtml); // parse the builds in the page
-
-		if (builds.size() > 0)
-		{
-			std::string buildurl = versionurl + builds.getLatest(); // use the latest build
-
-			std::string toolsurl = buildurl + FUSION_DEF_TOOLS_LOC;
-			std::string tools_pre15_url = buildurl + FUSION_DEF_PRE15_TOOLS_LOC;
-
-			std::string tools_diskpath = (temppath / FUSION_DEF_TOOLS_NAME).string();
-			std::string toolspre15_diskpath = (temppath / FUSION_DEF_PRE15_TOOLS_NAME).string();
-
-
-			bool toolsAvailable = (Curl::curlDownload(toolsurl, tools_diskpath) == CURLE_OK);
-			toolsAvailable &= (Curl::curlDownload(tools_pre15_url, toolspre15_diskpath) == CURLE_OK);
-
-			if (toolsAvailable) // if tools were successfully downloaded, extract them to destination folder
-			{
-				success = Archive::extract_tar(temppath / FUSION_DEF_TOOLS_NAME, FUSION_DEF_TOOLS_ZIP, temppath / FUSION_DEF_TOOLS_ZIP);
-				success &= Archive::extract_tar(temppath / FUSION_DEF_PRE15_TOOLS_NAME, FUSION_DEF_PRE15_TOOLS_ZIP, temppath / FUSION_DEF_PRE15_TOOLS_ZIP);
-
-				if (!success)
-				{
-					logerr("Couldn't extract zip files from tars");
-					continue;
-				}
-
-				success = Archive::extract_zip(temppath / FUSION_DEF_TOOLS_ZIP, FUSION_TAR_TOOLS_ISO, path / FUSION_ZIP_TOOLS_NAME);
-				success &= Archive::extract_zip(temppath / FUSION_DEF_PRE15_TOOLS_ZIP, FUSION_TAR_PRE15_TOOLS_ISO, path / FUSION_ZIP_PRE15_TOOLS_NAME);
-
-				// Cleanup zips
-				fs::remove(temppath / FUSION_DEF_TOOLS_ZIP);
-				fs::remove(temppath / FUSION_DEF_PRE15_TOOLS_ZIP);
-
-				if (!success)
-				{
-					logerr("Couldn't extract tools from zip files");
-				}
-				else
-				{
-					// Cleanup tars
-					fs::remove(temppath / FUSION_DEF_TOOLS_NAME);
-					fs::remove(temppath / FUSION_DEF_PRE15_TOOLS_NAME);
-
-					success = true;
-					break;
-				}
-			}
-			else {
-				// No tools available, try getting them from core fusion file
-				std::string coreurl = buildurl + FUSION_DEF_CORE_LOC;
-				std::string core_diskpath = (temppath / FUSION_DEF_CORE_NAME).string();
-
-				if (Curl::curlDownload(coreurl, core_diskpath) == CURLE_OK) // If the core package was successfully downloaded, extract the tools from it
-				{
-					logd("Extracting from .tar to temp folder ...");
-
-					fs::path temppath = fs::temp_directory_path();
-
-					success = Archive::extract_tar(temppath / FUSION_DEF_CORE_NAME, FUSION_DEF_CORE_NAME_ZIP, temppath / FUSION_DEF_CORE_NAME_ZIP);
-					if (!success) {
-						logerr("Couldn't extract from the tar file");
-						// Error in the tar file, try the next version number
-						continue;
-					}
-
-					logd("Extracting from .zip to destination folder ...");
-
-					success = Archive::extract_zip(temppath / FUSION_DEF_CORE_NAME_ZIP, FUSION_ZIP_TOOLS_ISO, path / FUSION_ZIP_TOOLS_NAME);
-					success &= Archive::extract_zip(temppath / FUSION_DEF_CORE_NAME_ZIP, FUSION_ZIP_PRE15_TOOLS_ISO, path / FUSION_ZIP_PRE15_TOOLS_NAME);
-
-					// Cleanup zip file
-					fs::remove(temppath / FUSION_DEF_CORE_NAME_ZIP);
-
-					if (!success)
-						logerr("Couldn't extract from the zip file"); // Error in the zip file, try the next version number
-					else
-					{
-						// Cleanup tar file
-						fs::remove(temppath / FUSION_DEF_CORE_NAME);
-
-						break; // All went good
-					}
-				}
-
-				// Cleanup tar file
-				fs::remove(temppath / FUSION_DEF_CORE_NAME);
-			}
-
-			// Cleanup tars
-			fs::remove(temppath / FUSION_DEF_TOOLS_NAME);
-			fs::remove(temppath / FUSION_DEF_PRE15_TOOLS_NAME);
+		if (downloader.download(path)) {
+			success = true;
+			break;
 		}
 	}
 
@@ -756,5 +591,5 @@ void downloadTools(fs::path path)
 		logerr("Couldn't find tools.");
 	}
 
-	curl_global_cleanup();
+	return success;
 }

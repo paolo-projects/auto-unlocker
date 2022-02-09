@@ -7,7 +7,7 @@
 */
 
 // Program options
-#define PROG_VERSION "v1.1.3"
+#define PROG_VERSION "v1.1.4"
 
 // Install - Default option
 #define INSTALL_OPTION "--install" 
@@ -34,7 +34,7 @@
 #define FUSION_DEF_PRE15_TOOLS_NAME "com.vmware.fusion.tools.darwinPre15.zip.tar"
 #define FUSION_DEF_PRE15_TOOLS_ZIP "com.vmware.fusion.tools.darwinPre15.zip"
 
-#define FUSION_DEF_CORE_LOC "/core/com.vmware.fusion.zip.tar"
+#define FUSION_DEF_CORE_LOC "/x86/core/com.vmware.fusion.zip.tar"
 #define FUSION_DEF_CORE_NAME "com.vmware.fusion.zip.tar"
 #define FUSION_DEF_CORE_NAME_ZIP "com.vmware.fusion.zip"
 

@@ -3,10 +3,20 @@
 
 #include <string>
 #include <vector>
+#include <array>
 #include <stdexcept>
 #include <cmath>
 #include <algorithm>
+#include <iterator>
+#include <functional>
 
+#ifdef WIN32
+#define fseek_e64(f, p, t) _fseeki64(f, p, t);
+#else
+#define fseek_e64(f, p, t) fseeko(f, p, t);
+#endif
+
+constexpr int TAR_BLOCK_SZ = 512;
 
 enum tar_type_flag {
 	REGTYPE = '0',		/* regular file */
@@ -44,6 +54,12 @@ struct tar_posix_header
 								  /* 512 */
 };
 
+class TarException : public std::runtime_error {
+public:
+	TarException(const char* message) : std::runtime_error(message) {}
+	TarException(const std::string& message) : std::runtime_error(message) {}
+};
+
 class Tar
 {
 public:
@@ -54,7 +70,7 @@ public:
 		int mode;
 		int ownerId;
 		int groupId;
-		int size;
+		size_t size;
 		int lastModified;
 		tar_type_flag typeflag;
 		std::string linkedName;
@@ -63,17 +79,20 @@ public:
 
 	Tar(std::string filename);
 	~Tar();
-	void extract(const File& file, std::string to);
-	bool extract(std::string fileName, std::string to);
+	void extract(const File& file, std::string to, void(*progressCallback)(float) = nullptr);
+	bool extract(std::string fileName, std::string to, void(*progressCallback)(float) = nullptr);
 	const std::vector<File>& getFileList() const;
+	bool contains(std::string fileName) const;
+	std::vector<File> search(const std::string& term);
 private:
+	void(*progressCallback)(float) = nullptr;
 	FILE* tarfile = NULL;
 	std::vector<File> fileList;
 
-	int oct_to_int(char* oct);
-	int oct_to_sz(char* oct);
+	int octToInt(char* oct);
+	size_t octToSz(char* oct);
 
-	static constexpr int EXTRACT_BUFFER_SZ = 1024 * 16;
+	static constexpr size_t EXTRACT_BUFFER_SZ = 1024 * 16;
 };
 
 #endif // TAR_H

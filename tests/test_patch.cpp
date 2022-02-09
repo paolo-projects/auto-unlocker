@@ -12,21 +12,25 @@
 #include <string>
 #include <fstream>
 #include "filesystem.hpp"
-#include "patchutils.h"
-#include "installinfoutils.h"
+#include "patcher.h"
+#include "installinfo.h"
 #include "tar.h"
+#include "unlocker.h"
 
 void test_tar();
 void do_test_patch();
 void test_failed(bool to_cleanup = true);
 void test_equalness();
 bool test_equal_file(fs::path file1, fs::path file2);
+bool test_download_files();
 void cleanup();
 
 std::string basepath_str = "";
 
 int main(int argc, char** argv)
 {
+	return test_download_files() ? 0 : 1;
+
 	if (argc > 1)
 	{
 		basepath_str = std::string(argv[1]);
@@ -159,6 +163,16 @@ bool test_equal_file(fs::path file1, fs::path file2) {
 			return false;
 	}
 	return true;
+}
+
+bool test_download_files() {
+	try {
+		return downloadTools(fs::path("./tools"));
+	}
+	catch (const std::exception& exc) {
+		fprintf(stderr, exc.what());
+		return false;
+	}
 }
 
 void cleanup()
