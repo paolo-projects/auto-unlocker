@@ -16,7 +16,7 @@ class Archive
 public:
 	static bool extractZip(fs::path from, std::string filename, fs::path to);
 	static bool extractTar(fs::path from, std::string filename, fs::path to);
-	static void Archive::extractionProgress(float progress);
+	static void extractionProgress(float progress);
 };
 
 #endif // ARCHIVEUTILS_H

@@ -4,6 +4,7 @@
 #include <string>
 #include "filesystem.hpp"
 #include <map>
+#include <stdexcept>
 
 #include <curl/curl.h>
 

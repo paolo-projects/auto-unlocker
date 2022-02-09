@@ -138,8 +138,7 @@ set (TESTTAR_SOURCES tests/test_tar.cpp /
 				src/installinfo.cpp /
 				src/winservices.cpp /
 				src/tar.cpp /
-				src/ziparchive.cpp /
-				src/toolsdownloader.cpp)
+				src/ziparchive.cpp)
 
 add_executable( TestTar ${TESTTAR_SOURCES}  "include/unlocker.h")
 

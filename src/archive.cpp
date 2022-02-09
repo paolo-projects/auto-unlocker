@@ -39,4 +39,5 @@ bool Archive::extractZip(fs::path from, std::string filename, fs::path to)
 
 void Archive::extractionProgress(float progress) {
 	printf("Extraction progress: %.0f %%  \r", progress*100);
+	fflush(stdout);
 }

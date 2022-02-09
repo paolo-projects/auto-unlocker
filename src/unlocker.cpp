@@ -107,7 +107,7 @@ void uninstall()
 						logerr("Error while restoring \"" + file.path().string() + "\".");
 					}
 				}
-				catch (fs::filesystem_error ex)
+				catch (const fs::filesystem_error& ex)
 				{
 					logerr(ex.what());
 				}
@@ -129,7 +129,7 @@ void uninstall()
 						logerr("Error while restoring \"" + file.path().string() + "\".");
 					}
 				}
-				catch (fs::filesystem_error ex)
+				catch (const fs::filesystem_error& ex)
 				{
 					logerr(ex.what());
 				}
@@ -185,7 +185,7 @@ void uninstall()
 				logerr("Error while restoring \"" + (backup / file).string() + "\".");
 			}
 		}
-		catch (fs::filesystem_error ex)
+		catch (const fs::filesystem_error& ex)
 		{
 			logerr(ex.what());
 		}
@@ -206,7 +206,7 @@ void uninstall()
 					logerr("Error while restoring \"" + (backup / fs::path(lib).filename()).string() + "\".");
 				}
 			}
-			catch (fs::filesystem_error ex)
+			catch (const fs::filesystem_error& ex)
 			{
 				logerr(ex.what());
 			}
@@ -356,15 +356,15 @@ void doPatch()
 
 	if (!fs::exists(vmx))
 	{
-		throw std::runtime_error(logerr("Vmx file not found");
+		throw std::runtime_error("Vmx file not found");
 	}
 	if (!fs::exists(vmx_debug))
 	{
-		throw std::runtime_error(logerr("Vmx-debug file not found");
+		throw std::runtime_error("Vmx-debug file not found");
 	}
 	if (!fs::exists(vmlib))
 	{
-		throw std::runtime_error(logerr("Vmlib file not found");
+		throw std::runtime_error("Vmlib file not found");
 	}
 
 	logd("File: " + vmx.filename().string());

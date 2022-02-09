@@ -3,6 +3,7 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <cstring>
 #include "colors.h"
 
 #include <sys/stat.h>

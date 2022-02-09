@@ -47,6 +47,7 @@ int Network::progress_callback(void* clientp, double dltotal, double dlnow, doub
 		printf("Download progress: %d %%, %.2f MB / %.2f MB, %.3f MB/s          \r",
 			(std::min)(100, (std::max)(0, int(dlnow * 100 / dltotal))),
 			mBytesNow, mBytesTotal, downloadRate);
+		fflush(stdout);
 
 		networkProgress->mBytesDownloadedLastTime = mBytesNow;
 		networkProgress->lastProgressUpdateTime = nowTime;
