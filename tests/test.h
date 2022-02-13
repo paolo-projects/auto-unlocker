@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <cstring>
+#include <string>
 #include "colors.h"
 
 #include <sys/stat.h>
@@ -11,6 +12,7 @@
 #include <Windows.h>
 #elif defined(__linux__)
 #include <unistd.h>
+#include <stdarg.h>
 #endif
 
 void test_info(const char* message, ...) {

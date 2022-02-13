@@ -86,7 +86,7 @@ void Network::curlDownload(const std::string& url, const std::string& fileName)
 		CURLcode res = curl_easy_perform(curl);
 		out_file.close();
 
-		std::cout << std::endl;
+		printf("\n");
 
 		curl_easy_cleanup(curl);
 

@@ -137,6 +137,7 @@ set (TESTTAR_SOURCES tests/test_tar.cpp /
 				src/archive.cpp /
 				src/installinfo.cpp /
 				src/winservices.cpp /
+				src/network.cpp /
 				src/tar.cpp /
 				src/ziparchive.cpp)
 
@@ -148,7 +149,12 @@ include_directories(TestTar ${ZLIB_INCLUDE_DIRS})
 include_directories(TestTar ${CURL_INCLUDE_DIRS})
 include_directories(TestTar ${LIBZIP_INCLUDE_DIRS})
 target_link_libraries (TestTar ${ZLIB_LIBRARIES})
+target_link_libraries (TestTar ${CURL_LIBRARIES})
 target_link_libraries (TestTar ${LIBZIP_LIBRARY})
+
+if(WIN32)
+	target_link_libraries (TestTar ws2_32 Wldap32)
+endif()
 
 set_target_properties( TestTar PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS ON)
 
@@ -165,6 +171,7 @@ set (TESTZIP_SOURCES tests/test_zip.cpp /
 				src/archive.cpp /
 				src/installinfo.cpp /
 				src/winservices.cpp /
+				src/network.cpp /
 				src/tar.cpp /
 				src/ziparchive.cpp /
 				src/toolsdownloader.cpp)
@@ -177,7 +184,12 @@ include_directories(TestZip ${ZLIB_INCLUDE_DIRS})
 include_directories(TestZip ${CURL_INCLUDE_DIRS})
 include_directories(TestZip ${LIBZIP_INCLUDE_DIRS})
 target_link_libraries (TestZip ${ZLIB_LIBRARIES})
+target_link_libraries (TestZip ${CURL_LIBRARIES})
 target_link_libraries (TestZip ${LIBZIP_LIBRARY})
+
+if(WIN32)
+	target_link_libraries (TestZip ws2_32 Wldap32)
+endif()
 
 set_target_properties( TestZip PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS ON)
 

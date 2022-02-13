@@ -27,49 +27,47 @@
 
 void install()
 {
-	try {
-		// Default output path is ./tools/
-		fs::path toolsdirectory = fs::path(".") / TOOLS_DOWNLOAD_FOLDER;
-		// Default backup path is ./backup/
-		fs::path backup = fs::path(".") / BACKUP_FOLDER;
+	// Default output path is ./tools/
+	fs::path toolsdirectory = fs::path(".") / TOOLS_DOWNLOAD_FOLDER;
+	// Default backup path is ./backup/
+	fs::path backup = fs::path(".") / BACKUP_FOLDER;
 
-		logd("Killing services and backing up files...");
-		preparePatch(backup);
+	logi("Killing services and backing up files...");
+	preparePatch(backup);
 
-		logd("Patching files...");
-		doPatch();
+	logi("Patching files...");
+	doPatch();
 
-		logd("Downloading tools into \"" + toolsdirectory.string() + "\" directory...");
+	logi("Downloading tools into \"" + toolsdirectory.string() + "\" directory...");
 
-		if (fs::exists(fs::path(".") / TOOLS_DOWNLOAD_FOLDER / FUSION_ZIP_TOOLS_NAME) && fs::exists(fs::path(".") / TOOLS_DOWNLOAD_FOLDER / FUSION_ZIP_PRE15_TOOLS_NAME))
-		{
-			std::cout << "Tools have been found in current folder. Do you want to use them or you want do download them again?" << std::endl
-				<< "Please check that the existing tools are working and are the most recent ones." << std::endl
-				<< "(Y/n) ";
+	bool alreadyHasTools = false;
 
-			char c = getc(stdin);
-
-			if (c != 'y' && c != 'Y')
-			{
-				downloadTools(toolsdirectory);
-			}
-		}
-		else
-		{
-			downloadTools(toolsdirectory);
-		}
-
-		logd("Copying tools into program directory...");
-		copyTools(toolsdirectory);
-
-		restartServices();
-
-		logd("Patch complete.");
-	}
-	catch (const std::exception& exc)
+	if (fs::exists(fs::path(".") / TOOLS_DOWNLOAD_FOLDER / FUSION_ZIP_TOOLS_NAME) && fs::exists(fs::path(".") / TOOLS_DOWNLOAD_FOLDER / FUSION_ZIP_PRE15_TOOLS_NAME))
 	{
-		KILL(logerr(std::string(exc.what())));
+		std::cout << "Tools have been found in current folder. Do you want to use them? Answering n will download them again" << std::endl
+			<< "Please check that the existing tools are working and are the most recent ones." << std::endl
+			<< "(y/n) ";
+
+		std::string c;
+		std::cin >> c;
+
+		if (c == "y" || c == "Y")
+		{
+			alreadyHasTools = true;
+		}
 	}
+
+	if(!alreadyHasTools)
+	{
+		downloadTools(toolsdirectory);
+	}
+
+	logi("Copying tools into program directory...");
+	copyTools(toolsdirectory);
+
+	restartServices();
+
+	logi("Patch complete.");
 }
 
 void uninstall()
@@ -88,7 +86,7 @@ void uninstall()
 	fs::path vmwareInstallDir = vmInfo.getInstallPath();
 	fs::path vmwareInstallDir64 = vmInfo.getInstallPath64();
 
-	logd("Restoring files...");
+	logi("Restoring files...");
 	// Copy contents of backup/
 	if (fs::exists(backup))
 	{
@@ -100,7 +98,7 @@ void uninstall()
 				{
 					if (fs::copy_file(file.path(), vmwareInstallDir / file.path().filename(), fs::copy_options::overwrite_existing))
 					{
-						logd("File \"" + file.path().string() + "\" restored successfully");
+						logi("File \"" + file.path().string() + "\" restored successfully");
 					}
 					else
 					{
@@ -122,7 +120,7 @@ void uninstall()
 				{
 					if (fs::copy_file(file.path(), vmwareInstallDir64 / file.path().filename(), fs::copy_options::overwrite_existing))
 					{
-						logd("File \"" + file.path().string() + "\" restored successfully");
+						logi("File \"" + file.path().string() + "\" restored successfully");
 					}
 					else
 					{
@@ -159,7 +157,7 @@ void uninstall()
 	// Restart services
 	restartServices();
 
-	logd("Uninstall complete.");
+	logi("Uninstall complete.");
 #elif defined (__linux__)
 	// Default output path is ./tools/
 	fs::path toolsdirectory = fs::path(".") / TOOLS_DOWNLOAD_FOLDER;
@@ -168,7 +166,7 @@ void uninstall()
 
 	fs::path vmwareDir = VM_LNX_PATH;
 
-	logd("Restoring files...");
+	logi("Restoring files...");
 
 	// Copy contents of backup/
 	std::vector<std::string> lnxBins = VM_LNX_BINS;
@@ -178,7 +176,7 @@ void uninstall()
 		{
 			if (fs::copy_file(backup / file, vmwareDir / file, fs::copy_options::overwrite_existing))
 			{
-				logd("File \"" + (backup / file).string() + "\" restored successfully");
+				logi("File \"" + (backup / file).string() + "\" restored successfully");
 			}
 			else
 			{
@@ -199,7 +197,7 @@ void uninstall()
 			{
 				if (fs::copy_file(backup / fs::path(lib).filename(), fs::path(lib), fs::copy_options::overwrite_existing))
 				{
-					logd("File \"" + (backup / fs::path(lib).filename()).string() + "\" restored successfully");
+					logi("File \"" + (backup / fs::path(lib).filename()).string() + "\" restored successfully");
 				}
 				else
 				{
@@ -230,7 +228,7 @@ void uninstall()
 	fs::remove_all(backup);
 	fs::remove_all(toolsdirectory);
 
-	logd("Uninstall complete.");
+	logi("Uninstall complete.");
 #endif
 }
 
@@ -261,7 +259,7 @@ void copyTools(fs::path toolspath)
 	{
 		if (fs::copy_file(toolsfrom / FUSION_ZIP_TOOLS_NAME, copyto / FUSION_ZIP_TOOLS_NAME, fs::copy_options::overwrite_existing))
 		{
-			logd("File \"" + (toolsfrom / FUSION_ZIP_TOOLS_NAME).string() + "\" copy done.");
+			logi("File \"" + (toolsfrom / FUSION_ZIP_TOOLS_NAME).string() + "\" copy done.");
 		}
 		else
 		{
@@ -277,7 +275,7 @@ void copyTools(fs::path toolspath)
 	{
 		if (fs::copy_file(toolsfrom / FUSION_ZIP_PRE15_TOOLS_NAME, copyto / FUSION_ZIP_PRE15_TOOLS_NAME, fs::copy_options::overwrite_existing))
 		{
-			logd("File \"" + (toolsfrom / FUSION_ZIP_PRE15_TOOLS_NAME).string() + "\" copy done.");
+			logi("File \"" + (toolsfrom / FUSION_ZIP_PRE15_TOOLS_NAME).string() + "\" copy done.");
 		}
 		else
 		{
@@ -319,19 +317,19 @@ void doPatch()
 		throw std::runtime_error("vmwarebase.dll file not found");
 	}
 
-	logd("File: " + vmx.filename().string());
+	logi("File: " + vmx.filename().string());
 	CHECKRES(Patcher::patchSMC(vmx, false));
 
-	logd("File: " + vmx_debug.filename().string());
+	logi("File: " + vmx_debug.filename().string());
 	CHECKRES(Patcher::patchSMC(vmx_debug, false));
 
 	if (fs::exists(vmx_stats))
 	{
-		logd("File: " + vmx_stats.filename().string());
+		logi("File: " + vmx_stats.filename().string());
 		CHECKRES(Patcher::patchSMC(vmx_stats, false));
 	}
 
-	logd("File: " + vmwarebase.filename().string());
+	logi("File: " + vmwarebase.filename().string());
 	CHECKRES(Patcher::patchBase(vmwarebase));
 
 #elif defined (__linux__)
@@ -367,19 +365,19 @@ void doPatch()
 		throw std::runtime_error("Vmlib file not found");
 	}
 
-	logd("File: " + vmx.filename().string());
+	logi("File: " + vmx.filename().string());
 	CHECKRES(Patcher::patchSMC(vmx, vmxso));
 
-	logd("File: " + vmx_debug.filename().string());
+	logi("File: " + vmx_debug.filename().string());
 	CHECKRES(Patcher::patchSMC(vmx_debug, vmxso));
 
 	if (fs::exists(vmx_stats))
 	{
-		logd("File: " + vmx_stats.filename().string());
+		logi("File: " + vmx_stats.filename().string());
 		CHECKRES(Patcher::patchSMC(vmx_stats, vmxso));
 	}
 
-	logd("File: " + vmlib.filename().string());
+	logi("File: " + vmlib.filename().string());
 	CHECKRES(Patcher::patchBase(vmlib));
 #else
 	logerr("OS not supported");
@@ -391,6 +389,7 @@ void stopServices()
 {
 #ifdef _WIN32
 	// Stop services
+	logi("Stopping services...");
 	auto srvcList = std::list<std::string> VM_KILL_SERVICES;
 	for (auto service : srvcList)
 	{
@@ -431,7 +430,7 @@ void stopServices()
 void restartServices()
 {
 #ifdef _WIN32
-	logd("Restarting services...");
+	logi("Restarting services...");
 	std::vector<std::string> servicesToStart = VM_KILL_SERVICES;
 	for (auto it = servicesToStart.rbegin(); it != servicesToStart.rend(); it++)
 	{
@@ -473,7 +472,7 @@ void preparePatch(fs::path backupPath)
 		{
 			if (fs::copy_file(fPath, destpath / fPath.filename(), fs::copy_options::overwrite_existing))
 			{
-				logd("File \"" + fPath.string() + "\" backup done.");
+				logi("File \"" + fPath.string() + "\" backup done.");
 			}
 			else
 			{
@@ -500,7 +499,7 @@ void preparePatch(fs::path backupPath)
 		{
 			if (fs::copy_file(fPath, destpath / fPath.filename(), fs::copy_options::overwrite_existing))
 			{
-				logd("File \"" + fPath.string() + "\" backup done.");
+				logi("File \"" + fPath.string() + "\" backup done.");
 			}
 			else
 			{
@@ -524,7 +523,7 @@ void preparePatch(fs::path backupPath)
 			{
 				if (fs::copy_file(libpath, destpath / libpath.filename(), fs::copy_options::overwrite_existing))
 				{
-					logd("File \"" + libpath.string() + "\" backup done.");
+					logi("File \"" + libpath.string() + "\" backup done.");
 				}
 				else
 				{
@@ -585,7 +584,7 @@ bool downloadTools(fs::path path)
 	}
 
 	if (success) {
-		logd("Tools successfully downloaded!");
+		logi("Tools successfully downloaded!");
 	}
 	else {
 		logerr("Couldn't find tools.");

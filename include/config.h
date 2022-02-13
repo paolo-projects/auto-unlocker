@@ -9,6 +9,13 @@
 // Program options
 #define PROG_VERSION "v1.1.4"
 
+// Log level
+// 0 - none
+// 1 - info (standard info, files being extracted, downloaded, etc.)
+// 2 - debug (useful info for debugging the patch e.g. addresses, values)
+// 3 - verbose (detailed info about the code)
+#define LOGLEVEL 3
+
 // Install - Default option
 #define INSTALL_OPTION "--install" 
 // Uninstall

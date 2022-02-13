@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <chrono>
 #include <functional>
+#include "debug.h"
 
 #define CURL_DEBUG false
 

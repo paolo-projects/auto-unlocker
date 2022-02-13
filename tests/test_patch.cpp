@@ -7,6 +7,7 @@
  * The files are not included for copyright reasons.
  */
 
+#include "test.h"
 #include "filesystem.hpp"
 #include <iostream>
 #include <string>
@@ -29,20 +30,24 @@ std::string basepath_str = "";
 
 int main(int argc, char** argv)
 {
-	return test_download_files() ? 0 : 1;
+	//return test_download_files() ? 0 : 1;
 
 	if (argc > 1)
 	{
 		basepath_str = std::string(argv[1]);
-		std::cout << "Basepath for test files is: " << basepath_str << "\n";
+		test_info("Basepath for test files is: %s", argv[1]);
+	}
+	else {
+		std::string cwd = getCwd();
+		test_info("Basepath for test is the cwd: %s", cwd.c_str());
 	}
 
-	test_tar();
+	//test_tar();
 	do_test_patch();
 	test_equalness();
 	cleanup();
 
-	std::cout << "Done.\n";
+	test_info("Done.");
 
 	return 0;
 }
@@ -55,26 +60,40 @@ void test_tar()
 
 void do_test_patch()
 {
+	BEGIN_TEST("the patch by comparing with a known working patch\n" \
+		"This test needs the following directories in the `testing` folder:\n" \
+		"\torig -> the original files\n" \
+		"\tgood -> the files patched with a known working patch\n" \
+		"In both folders the following files are needed (for Windows):\n" \
+		"\tvmwarebase.dll\n" \
+		"\tvmware-vmx.exe\n" \
+		"\tvmware-vmx-debug.exe");
+
+#ifndef _WIN32
+	TEST_ERROR("This test is only for windows os");
+#endif
+
 	fs::path basepath = ".";
-	if (basepath_str.length() > 0)
+	if (basepath_str.length() > 0) {
 		basepath = basepath_str;
+	}
 
 	std::string binList[] = VM_WIN_PATCH_FILES;
 
 	fs::path orig_basedir = basepath / "testing" / "orig";
 	fs::path dest_basedir = basepath / "testing" / "dst";
 
-	std::cout << "Creating copies of test files into dst directory...\n";
+	test_info("Creating copies of test files into dst directory...");
 
 	// Copy original files to destination
 	for (const std::string& file : binList) {
 		// Skip this file as it's not provided in latest release
 		if (file != "vmware-vmx-stats.exe") {
 			try {
-				fs::copy_file(orig_basedir / file, dest_basedir / file);
+				fs::copy_file(orig_basedir / file, dest_basedir / file, fs::copy_options::overwrite_existing);
 			}
 			catch (const std::exception& exc) {
-				std::cerr << "Copy of file " << file << " failed with error: " << exc.what() << "\n";
+				test_error("Copy of file %s failed with error: %s", file.c_str(), exc.what());
 				test_failed(false);
 			}
 		}
@@ -87,27 +106,27 @@ void do_test_patch()
 
 	if (!fs::exists(vmx))
 	{
-		std::cerr << "Vmx file not found\n";
+		test_error("Vmx file not found");
 		test_failed(false);
 	}
 	if (!fs::exists(vmx_debug))
 	{
-		std::cerr << "Vmx-debug file not found\n";
+		test_error("Vmx-debug file not found");
 		test_failed(false);
 	}
 	if (!fs::exists(vmwarebase))
 	{
-		std::cerr << "vmwarebase.dll file not found\n";
+		test_error("vmwarebase.dll file not found\n");
 		test_failed(false);
 	}
 
-	logd("File: " + vmx.filename().string());
+	test_info("File: %s", vmx.filename().string().c_str());
 	Patcher::patchSMC(vmx, false);
 
-	logd("File: " + vmx_debug.filename().string());
+	test_info("File: %s", vmx_debug.filename().string().c_str());
 	Patcher::patchSMC(vmx_debug, false);
 
-	logd("File: " + vmwarebase.filename().string());
+	test_info("File: %s", vmwarebase.filename().string().c_str());
 	Patcher::patchBase(vmwarebase);
 }
 
@@ -133,36 +152,48 @@ void test_equalness()
 		// Skip this file as it's not provided in latest release
 		if (file != "vmware-vmx-stats.exe") {
 			if (!test_equal_file(dest_basedir / file, good_basedir / file)) {
-				std::cerr << "Test for file " << file << " failed!\n";
+				test_error("Test for file %s failed!", file.c_str());
 				test_failed();
 			}
 			else {
-				std::cout << "Test for file " << file << " success!\n";
+				test_success("Test for file %s success!\n", file.c_str());
 			}
 		}
 	}
 }
 
 bool test_equal_file(fs::path file1, fs::path file2) {
-	std::ifstream file1_i(file1, std::ios::binary);
-	std::ifstream file2_i(file2, std::ios::binary);
+	/*std::ifstream file1_i(file1, std::ios::binary);
+	std::ifstream file2_i(file2, std::ios::binary);*/
+	constexpr size_t FBUF_SIZE = 16 * 1024;
 
-	char buffer1[1024], buffer2[1024];
+	FILE* f1, * f2;
+	f1 = fopen(file1.string().c_str(), "rb");
+	f2 = fopen(file2.string().c_str(), "rb");
+
+	if (f1 == NULL || f2 == NULL) {
+		return false;
+	}
+
+	std::array<char, FBUF_SIZE> buffer1, buffer2;
 	size_t read1, read2;
 
-	while (!file1_i.eof() && !file2_i.eof()) {
-		file1_i.read(buffer1, 1024);
-		read1 = file1_i.gcount();
-		file2_i.read(buffer2, 1024);
-		read2 = file2_i.gcount();
+	bool result = true;
 
-		if (read1 != read2)
-			return false;
+	while (!feof(f1) && !feof(f2)) {
+		read1 = fread(buffer1.data(), 1, FBUF_SIZE, f1);
+		read2 = fread(buffer2.data(), 1, FBUF_SIZE, f2);
 
-		if (!std::equal(buffer1, buffer1 + read1, buffer2))
-			return false;
+		if (read1 != read2 ||
+			!std::equal(buffer1.begin(), buffer1.begin() + read1, buffer2.begin())) {
+			result = false;
+			break;
+		}
 	}
-	return true;
+
+	fclose(f1);
+	fclose(f2);
+	return result;
 }
 
 bool test_download_files() {
@@ -177,7 +208,7 @@ bool test_download_files() {
 
 void cleanup()
 {
-	std::cout << "Cleaning up test files...\n";
+	test_info("Cleaning up test files...");
 
 	fs::path basepath = ".";
 	if (basepath_str.length() > 0)

@@ -421,12 +421,14 @@ void Patcher::patchBase(fs::path name)
 	// Should work for Workstation 12 - 15...
 
 	std::vector<char> memFile = readFile(file);
-	/* REGEX WAY --- Seems to not work
+	// REGEX WAY --- Seems to not work 
+
+	logv("Patching through REGEX");
 	std::regex darwin = std::regex(DARWIN_REGEX);
 	std::string buf;
 	buf.resize(32);
 
-	// Loop through each entryand set top bit
+	// Loop through each entry and set top bit
 	// 0xBE -- > 0xBF (WKS 12)
 	// 0x3E -- > 0x3F (WKS 14)
 
@@ -451,9 +453,11 @@ void Patcher::patchBase(fs::path name)
 		logd("GOS Patched flag @: " + hexRepresentation(pos));
 
 		occurrences++;
-	} */
+	}
 
-	/* Iterative way */
+	//Iterative way
+	/*
+	logv("Patching iteratively");
 	std::vector<char> darwinPattern[4];
 
 	darwinPattern[0] = DARWIN_PATTERN_PERM_1;
@@ -487,7 +491,7 @@ void Patcher::patchBase(fs::path name)
 				val = val.value() + 40;
 			}
 		} while (val.has_value());
-	}
+	}*/
 
 	file.flush();
 	file.close();
@@ -547,7 +551,7 @@ void Patcher::patchElf(std::fstream& file, long long oldoffset, long long newoff
 	file.read(reinterpret_cast<char*>(&e_shnum), sizeof(unsigned short));
 	file.read(reinterpret_cast<char*>(&e_shstrndx), sizeof(unsigned short));
 
-	printf("e_shoff: 0x%02llX e_shentsize: 0x%02X e_shnum:0x%02X e_shstrndx:0x%02X\n", e_shoff, e_shentsize,
+	logd("e_shoff: 0x%02llX e_shentsize: 0x%02X e_shnum:0x%02X e_shstrndx:0x%02X\n", e_shoff, e_shentsize,
 		e_shnum, e_shstrndx);
 
 	for (unsigned short i = 0; i < e_shnum; i++)
