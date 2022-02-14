@@ -1,8 +1,20 @@
+#ifdef _WIN32
+#include <Windows.h>
+#include "win32/mainwindow.h"
+
+void loadVisualStyles();
+bool registerControlStyles(DWORD style);
+#endif
+
 #include <iostream>
 #include "unlocker.h"
 
+#ifdef __linux__
 int main(int argc, const char* argv[])
 {
+	TerminalLogStrategy logStrategy;
+	Logger::init(&logStrategy);
+
 	std::cout << "auto-unlocker " << PROG_VERSION << std::endl
 		<< std::endl;
 
@@ -12,7 +24,7 @@ int main(int argc, const char* argv[])
 		{
 			// User not root and not elevated permissions
 			std::cout << "The program is not running as root, the patch may not work properly." << std::endl <<
-						"Running the program with sudo/as root is recommended, in most cases required... Do you want to continue? (y/N) ";
+						"Running the program with sudo/as root is recommended, in most cases required... Do you want to continue? (y/n) ";
 			std::string c;
 			std::cin >> c;
 
@@ -61,14 +73,42 @@ int main(int argc, const char* argv[])
 	}
 	catch (const std::exception& exc)
 	{
-		logerr(std::string(exc.what()));
+		Logger::error(std::string(exc.what()));
 	}
 
 #ifdef _WIN32
-	std::cout << "Press enter to quit." << std::endl;
-	std::string c;
-	std::cin >> c;
+	system("pause");
 #endif
 
 	return 0;
 }
+#elif defined _WIN32
+
+bool registerControlStyles(DWORD style)
+{
+	INITCOMMONCONTROLSEX comButton = {};
+	comButton.dwSize = sizeof(comButton);
+	comButton.dwICC = style;
+	return InitCommonControlsEx(&comButton);
+}
+
+void loadVisualStyles()
+{
+	std::vector<DWORD> styles = {
+		ICC_WIN95_CLASSES,
+		ICC_PROGRESS_CLASS
+	};
+
+	for (DWORD style : styles)
+	{
+		registerControlStyles(style);
+	}
+}
+
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevINSTANCE, PSTR pCmdLine, int nCmdShow)
+{
+	MainWindow mainWindow(hInstance, nCmdShow);
+	mainWindow.show();
+}
+
+#endif

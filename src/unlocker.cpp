@@ -32,42 +32,31 @@ void install()
 	// Default backup path is ./backup/
 	fs::path backup = fs::path(".") / BACKUP_FOLDER;
 
-	logi("Killing services and backing up files...");
+	Logger::info("Killing services and backing up files...");
 	preparePatch(backup);
 
-	logi("Patching files...");
+	Logger::info("Patching files...");
 	doPatch();
 
-	logi("Downloading tools into \"" + toolsdirectory.string() + "\" directory...");
+	Logger::info("Downloading tools into \"" + toolsdirectory.string() + "\" directory...");
 
-	bool alreadyHasTools = false;
-
-	if (fs::exists(fs::path(".") / TOOLS_DOWNLOAD_FOLDER / FUSION_ZIP_TOOLS_NAME) && fs::exists(fs::path(".") / TOOLS_DOWNLOAD_FOLDER / FUSION_ZIP_PRE15_TOOLS_NAME))
-	{
-		std::cout << "Tools have been found in current folder. Do you want to use them? Answering n will download them again" << std::endl
-			<< "Please check that the existing tools are working and are the most recent ones." << std::endl
-			<< "(y/n) ";
-
-		std::string c;
-		std::cin >> c;
-
-		if (c == "y" || c == "Y")
-		{
-			alreadyHasTools = true;
-		}
-	}
-
+	bool alreadyHasTools = fs::exists(fs::path(".") / TOOLS_DOWNLOAD_FOLDER / FUSION_ZIP_TOOLS_NAME) && fs::exists(fs::path(".") / TOOLS_DOWNLOAD_FOLDER / FUSION_ZIP_PRE15_TOOLS_NAME);
+	
 	if(!alreadyHasTools)
 	{
 		downloadTools(toolsdirectory);
 	}
+	else {
+		Logger::info("Tools have been found in the `tools` folder. Using them...\n"
+			"Please check that the existing tools are working and are the most recent ones.");
+	}
 
-	logi("Copying tools into program directory...");
+	Logger::info("Copying tools into program directory...");
 	copyTools(toolsdirectory);
 
 	restartServices();
 
-	logi("Patch complete.");
+	Logger::info("Patch complete.");
 }
 
 void uninstall()
@@ -86,7 +75,7 @@ void uninstall()
 	fs::path vmwareInstallDir = vmInfo.getInstallPath();
 	fs::path vmwareInstallDir64 = vmInfo.getInstallPath64();
 
-	logi("Restoring files...");
+	Logger::info("Restoring files...");
 	// Copy contents of backup/
 	if (fs::exists(backup))
 	{
@@ -98,16 +87,16 @@ void uninstall()
 				{
 					if (fs::copy_file(file.path(), vmwareInstallDir / file.path().filename(), fs::copy_options::overwrite_existing))
 					{
-						logi("File \"" + file.path().string() + "\" restored successfully");
+						Logger::info("File \"" + file.path().string() + "\" restored successfully");
 					}
 					else
 					{
-						logerr("Error while restoring \"" + file.path().string() + "\".");
+						Logger::info("Error while restoring \"" + file.path().string() + "\".");
 					}
 				}
 				catch (const fs::filesystem_error& ex)
 				{
-					logerr(ex.what());
+					Logger::error(ex.what());
 				}
 			}
 		}
@@ -120,22 +109,22 @@ void uninstall()
 				{
 					if (fs::copy_file(file.path(), vmwareInstallDir64 / file.path().filename(), fs::copy_options::overwrite_existing))
 					{
-						logi("File \"" + file.path().string() + "\" restored successfully");
+						Logger::info("File \"" + file.path().string() + "\" restored successfully");
 					}
 					else
 					{
-						logerr("Error while restoring \"" + file.path().string() + "\".");
+						Logger::error("Error while restoring \"" + file.path().string() + "\".");
 					}
 				}
 				catch (const fs::filesystem_error& ex)
 				{
-					logerr(ex.what());
+					Logger::error(ex.what());
 				}
 			}
 		}
 	}
 	else {
-		logerr("Couldn't find backup files...");
+		Logger::error("Couldn't find backup files...");
 		return;
 	}
 	// Remove darwin*.* from InstallDir
@@ -157,7 +146,7 @@ void uninstall()
 	// Restart services
 	restartServices();
 
-	logi("Uninstall complete.");
+	Logger::info("Uninstall complete.");
 #elif defined (__linux__)
 	// Default output path is ./tools/
 	fs::path toolsdirectory = fs::path(".") / TOOLS_DOWNLOAD_FOLDER;
@@ -166,7 +155,7 @@ void uninstall()
 
 	fs::path vmwareDir = VM_LNX_PATH;
 
-	logi("Restoring files...");
+	Logger::info("Restoring files...");
 
 	// Copy contents of backup/
 	std::vector<std::string> lnxBins = VM_LNX_BINS;
@@ -176,16 +165,16 @@ void uninstall()
 		{
 			if (fs::copy_file(backup / file, vmwareDir / file, fs::copy_options::overwrite_existing))
 			{
-				logi("File \"" + (backup / file).string() + "\" restored successfully");
+				Logger::info("File \"" + (backup / file).string() + "\" restored successfully");
 			}
 			else
 			{
-				logerr("Error while restoring \"" + (backup / file).string() + "\".");
+				Logger::error("Error while restoring \"" + (backup / file).string() + "\".");
 			}
 		}
 		catch (const fs::filesystem_error& ex)
 		{
-			logerr(ex.what());
+			Logger::error(ex.what());
 		}
 	}
 	std::vector<std::string> vmLibCandidates = VM_LNX_LIB_CANDIDATES;
@@ -201,12 +190,12 @@ void uninstall()
 				}
 				else
 				{
-					logerr("Error while restoring \"" + (backup / fs::path(lib).filename()).string() + "\".");
+					Logger::error("Error while restoring \"" + (backup / fs::path(lib).filename()).string() + "\".");
 				}
 			}
 			catch (const fs::filesystem_error& ex)
 			{
-				logerr(ex.what());
+				Logger::error(ex.what());
 			}
 			break;
 		}
@@ -259,32 +248,32 @@ void copyTools(fs::path toolspath)
 	{
 		if (fs::copy_file(toolsfrom / FUSION_ZIP_TOOLS_NAME, copyto / FUSION_ZIP_TOOLS_NAME, fs::copy_options::overwrite_existing))
 		{
-			logi("File \"" + (toolsfrom / FUSION_ZIP_TOOLS_NAME).string() + "\" copy done.");
+			Logger::info("File \"" + (toolsfrom / FUSION_ZIP_TOOLS_NAME).string() + "\" copy done.");
 		}
 		else
 		{
-			logerr("File \"" + (toolsfrom / FUSION_ZIP_TOOLS_NAME).string() + "\" could not be copied.");
+			Logger::error("File \"" + (toolsfrom / FUSION_ZIP_TOOLS_NAME).string() + "\" could not be copied.");
 		}
 	}
 	catch (const std::exception& e)
 	{
-		logerr(e.what());
+		Logger::error(e.what());
 	}
 
 	try
 	{
 		if (fs::copy_file(toolsfrom / FUSION_ZIP_PRE15_TOOLS_NAME, copyto / FUSION_ZIP_PRE15_TOOLS_NAME, fs::copy_options::overwrite_existing))
 		{
-			logi("File \"" + (toolsfrom / FUSION_ZIP_PRE15_TOOLS_NAME).string() + "\" copy done.");
+			Logger::info("File \"" + (toolsfrom / FUSION_ZIP_PRE15_TOOLS_NAME).string() + "\" copy done.");
 		}
 		else
 		{
-			logerr("File \"" + (toolsfrom / FUSION_ZIP_PRE15_TOOLS_NAME).string() + "\" could not be copied.");
+			Logger::error("File \"" + (toolsfrom / FUSION_ZIP_PRE15_TOOLS_NAME).string() + "\" could not be copied.");
 		}
 	}
 	catch (const std::exception& e)
 	{
-		logerr(e.what());
+		Logger::error(e.what());
 	}
 }
 
@@ -317,19 +306,19 @@ void doPatch()
 		throw std::runtime_error("vmwarebase.dll file not found");
 	}
 
-	logi("File: " + vmx.filename().string());
+	Logger::info("File: " + vmx.filename().string());
 	CHECKRES(Patcher::patchSMC(vmx, false));
 
-	logi("File: " + vmx_debug.filename().string());
+	Logger::info("File: " + vmx_debug.filename().string());
 	CHECKRES(Patcher::patchSMC(vmx_debug, false));
 
 	if (fs::exists(vmx_stats))
 	{
-		logi("File: " + vmx_stats.filename().string());
+		Logger::info("File: " + vmx_stats.filename().string());
 		CHECKRES(Patcher::patchSMC(vmx_stats, false));
 	}
 
-	logi("File: " + vmwarebase.filename().string());
+	Logger::info("File: " + vmwarebase.filename().string());
 	CHECKRES(Patcher::patchBase(vmwarebase));
 
 #elif defined (__linux__)
@@ -365,22 +354,22 @@ void doPatch()
 		throw std::runtime_error("Vmlib file not found");
 	}
 
-	logi("File: " + vmx.filename().string());
+	Logger::info("File: " + vmx.filename().string());
 	CHECKRES(Patcher::patchSMC(vmx, vmxso));
 
-	logi("File: " + vmx_debug.filename().string());
+	Logger::info("File: " + vmx_debug.filename().string());
 	CHECKRES(Patcher::patchSMC(vmx_debug, vmxso));
 
 	if (fs::exists(vmx_stats))
 	{
-		logi("File: " + vmx_stats.filename().string());
+		Logger::info("File: " + vmx_stats.filename().string());
 		CHECKRES(Patcher::patchSMC(vmx_stats, vmxso));
 	}
 
-	logi("File: " + vmlib.filename().string());
+	Logger::info("File: " + vmlib.filename().string());
 	CHECKRES(Patcher::patchBase(vmlib));
 #else
-	logerr("OS not supported");
+	Logger::error("OS not supported");
 	exit(1);
 #endif
 }
@@ -389,14 +378,14 @@ void stopServices()
 {
 #ifdef _WIN32
 	// Stop services
-	logi("Stopping services...");
+	Logger::info("Stopping services...");
 	auto srvcList = std::list<std::string> VM_KILL_SERVICES;
 	for (auto service : srvcList)
 	{
 		try
 		{
 			ServiceStopper::StopService_s(service);
-			logd("Service \"" + service + "\" stopped successfully.");
+			Logger::debug("Service \"" + service + "\" stopped successfully.");
 		}
 		catch (const ServiceStopper::ServiceStopException& ex)
 		{
@@ -412,16 +401,16 @@ void stopServices()
 		try {
 			if (ServiceStopper::KillProcess(process))
 			{
-				logd("Process \"" + process + "\" killed successfully.");
+				Logger::debug("Process \"" + process + "\" killed successfully.");
 			}
 			else
 			{
-				logerr("Could not kill process \"" + process + "\".");
+				Logger::error("Could not kill process \"" + process + "\".");
 			}
 		}
 		catch (const ServiceStopper::ServiceStopException& ex)
 		{
-			logerr(ex.what());
+			Logger::error(ex.what());
 		}
 	}
 #endif
@@ -430,14 +419,14 @@ void stopServices()
 void restartServices()
 {
 #ifdef _WIN32
-	logi("Restarting services...");
+	Logger::info("Restarting services...");
 	std::vector<std::string> servicesToStart = VM_KILL_SERVICES;
 	for (auto it = servicesToStart.rbegin(); it != servicesToStart.rend(); it++)
 	{
 		try
 		{
 			ServiceStopper::StartService_s(*it);
-			logd("Service \"" + *it + "\" started successfully.");
+			Logger::debug("Service \"" + *it + "\" started successfully.");
 		}
 		catch (const ServiceStopper::ServiceStopException& ex)
 		{
@@ -472,16 +461,16 @@ void preparePatch(fs::path backupPath)
 		{
 			if (fs::copy_file(fPath, destpath / fPath.filename(), fs::copy_options::overwrite_existing))
 			{
-				logi("File \"" + fPath.string() + "\" backup done.");
+				Logger::info("File \"" + fPath.string() + "\" backup done.");
 			}
 			else
 			{
-				logerr("File \"" + fPath.string() + "\" could not be copied.");
+				Logger::error("File \"" + fPath.string() + "\" could not be copied.");
 			}
 		}
 		catch (const std::exception& e)
 		{
-			logerr(e.what());
+			Logger::error(e.what());
 		}
 	}
 #elif defined (__linux__)
@@ -499,16 +488,16 @@ void preparePatch(fs::path backupPath)
 		{
 			if (fs::copy_file(fPath, destpath / fPath.filename(), fs::copy_options::overwrite_existing))
 			{
-				logi("File \"" + fPath.string() + "\" backup done.");
+				Logger::info("File \"" + fPath.string() + "\" backup done.");
 			}
 			else
 			{
-				logerr("File \"" + fPath.string() + "\" could not be copied.");
+				Logger::error("File \"" + fPath.string() + "\" could not be copied.");
 			}
 		}
 		catch (const std::exception& e)
 		{
-			logerr(e.what());
+			Logger::error(e.what());
 		}
 	}
 
@@ -523,24 +512,24 @@ void preparePatch(fs::path backupPath)
 			{
 				if (fs::copy_file(libpath, destpath / libpath.filename(), fs::copy_options::overwrite_existing))
 				{
-					logi("File \"" + libpath.string() + "\" backup done.");
+					Logger::info("File \"" + libpath.string() + "\" backup done.");
 				}
 				else
 				{
-					logerr("File \"" + libpath.string() + "\" could not be copied.");
+					Logger::error("File \"" + libpath.string() + "\" could not be copied.");
 				}
 
 				break;
 			}
 			catch (const std::exception& e)
 			{
-				logerr(e.what());
+				Logger::error(e.what());
 			}
 		}
 	}
 #else
 	// Either the compiler definitions are not working or the the tool is being compiled on an OS where it's not meant to be compiled
-	logerr("OS not supported");
+	Logger::error("OS not supported");
 	exit(1);
 #endif
 }
@@ -564,7 +553,7 @@ bool downloadTools(fs::path path)
 
 	if (versionParser.size() == 0)
 	{
-		logerr("No Fusion versions found in Download url location.");
+		Logger::error("No Fusion versions found in Download url location.");
 		return false;
 	}
 
@@ -584,10 +573,10 @@ bool downloadTools(fs::path path)
 	}
 
 	if (success) {
-		logi("Tools successfully downloaded!");
+		Logger::info("Tools successfully downloaded!");
 	}
 	else {
-		logerr("Couldn't find tools.");
+		Logger::error("Couldn't find tools.");
 	}
 
 	return success;

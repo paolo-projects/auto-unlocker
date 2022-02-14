@@ -26,7 +26,7 @@
 
 #include <stdio.h>
 
-#define CHECKRES(x) try{ (x); } catch (const PatchException& exc) { logerr(exc.what()); }
+#define CHECKRES(x) try{ (x); } catch (const PatchException& exc) { Logger::error(exc.what()); }
 #define KILL(x) (x); exit(1);
 
 // Forward declarations

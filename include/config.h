@@ -7,7 +7,7 @@
 */
 
 // Program options
-#define PROG_VERSION "v1.1.4"
+#define PROG_VERSION "v2.0.0"
 
 // Log level
 // 0 - none

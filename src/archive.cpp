@@ -6,7 +6,7 @@ bool Archive::extractTar(fs::path from, std::string filename, fs::path to)
 	{
 		Tar tarfile(from.string());
 		if (!tarfile.extract(filename, to.string(), Archive::extractionProgress)) {
-			logerr("TAR: Error while extracting %s. Not in the archive", filename.c_str());
+			Logger::error("TAR: Error while extracting %s. Not in the archive", filename.c_str());
 			return false;
 		}
 		printf("\n");
@@ -14,7 +14,7 @@ bool Archive::extractTar(fs::path from, std::string filename, fs::path to)
 	}
 	catch (const std::exception& exc)
 	{
-		logerr("TAR: An error occurred while extracting %s. %s", from.string().c_str(), exc.what());
+		Logger::error("TAR: An error occurred while extracting %s. %s", from.string().c_str(), exc.what());
 		return false;
 	}
 }
@@ -24,7 +24,7 @@ bool Archive::extractZip(fs::path from, std::string filename, fs::path to)
 	try {
 		Zip zip(from.string());
 		if (!zip.extract(filename, to.string(), Archive::extractionProgress)) {
-			logerr("ZIP: Error while extracting %s. Not in the archive", filename.c_str());
+			Logger::error("ZIP: Error while extracting %s. Not in the archive", filename.c_str());
 			return false;
 		}
 		printf("\n");
@@ -32,7 +32,7 @@ bool Archive::extractZip(fs::path from, std::string filename, fs::path to)
 		return true;
 	}
 	catch (const std::exception& exc) {
-		logerr("ZIP: An error occurred while extracting %s. %s", from.string().c_str(), exc.what());
+		Logger::error("ZIP: An error occurred while extracting %s. %s", from.string().c_str(), exc.what());
 		return false;
 	}
 }

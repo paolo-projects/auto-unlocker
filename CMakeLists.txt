@@ -53,6 +53,20 @@ set (SOURCE_FILES src/unlocker.cpp /
 				src/ziparchive.cpp /
 				src/toolsdownloader.cpp)
 
+if(WIN32)
+	set (SOURCE_FILES ${SOURCE_FILES} /
+					src/win32/mainwindow.cpp /
+					src/win32/controls/button.cpp /
+					src/win32/controls/editbox.cpp /
+					src/win32/controls/window.cpp /
+					src/win32/controls/control.cpp /
+					src/win32/controls/label.cpp /
+					src/win32/controls/progress.cpp /
+					src/win32/controls/groupbox.cpp /
+					src/win32/controls/checkbox.cpp /
+	)
+endif()
+
 IF (MSVC)
 	IF (UNLOCKER_STATIC_LIBS_WIN)
 		# Preprocessor definitions needed to avoid name mangling when statically importing libs on MSVC compiler
@@ -62,7 +76,11 @@ IF (MSVC)
 	ENDIF()
 ENDIF (MSVC)
 
-add_executable(Unlocker ${SOURCE_FILES})
+if(WIN32)
+	add_executable(Unlocker WIN32 ${SOURCE_FILES})
+else()
+	add_executable(Unlocker ${SOURCE_FILES})
+endif()
 
 # Support skipping file offsets when tar contains files larger than ~2 Gig
 target_compile_definitions(Unlocker PUBLIC _FILE_OFFSET_BITS=64)
@@ -74,7 +92,7 @@ target_link_libraries (Unlocker ${CURL_LIBRARIES})
 target_link_libraries (Unlocker ${LIBZIP_LIBRARY})
 
 if(WIN32)
-	target_link_libraries (Unlocker ws2_32 Wldap32)
+	target_link_libraries (Unlocker ws2_32 Wldap32 ComCtl32.lib Uxtheme.lib User32.lib Shlwapi.lib)
 endif()
 
 # Amend manifest to tell Windows that the app needs admin privileges

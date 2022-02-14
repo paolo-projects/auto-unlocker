@@ -3,8 +3,8 @@
      xmlns:asmv1="urn:schemas-microsoft-com:asm.v1" 
      xmlns:asmv2="urn:schemas-microsoft-com:asm.v2" 
      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-        <assemblyIdentity version="1.0.0.0" name="MyApplication.app" />
-        <trustInfo xmlns="urn:schemas-microsoft-com:asm.v2">
+        <assemblyIdentity version="1.0.0.0" name="paolo-projects.AutoUnlocker" />
+        <!--<trustInfo xmlns="urn:schemas-microsoft-com:asm.v2">
             <security>
                 <requestedPrivileges xmlns="urn:schemas-microsoft-com:asm.v3">
                     <requestedExecutionLevel level="requireAdministrator" 
@@ -16,9 +16,20 @@
                      version="1" ID="Custom" SameSite="site" />
                 </applicationRequestMinimum>
             </security>
-        </trustInfo>
+        </trustInfo>-->
         <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
             <application>
             </application>
         </compatibility>
+		<dependency>
+			<dependentAssembly>
+			    <assemblyIdentity
+                    type="win32"
+                    name="Microsoft.Windows.Common-Controls"
+                    version="6.0.0.0"
+                    processorArchitecture="amd64"
+                    publicKeyToken="6595b64144ccf1df"
+                    language="*" />
+			</dependentAssembly>
+		</dependency>
     </asmv1:assembly>

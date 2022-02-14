@@ -168,7 +168,7 @@ void Patcher::printkey(int i, unsigned long long offset, const smc_key_struct& s
 	}
 	result << " " << hexRepresentation(smc_data);
 
-	logd(result.str());
+	Logger::debug(result.str());
 }
 
 void Patcher::patchSMC(fs::path name, bool isSharedObj)
@@ -183,7 +183,7 @@ void Patcher::patchSMC(fs::path name, bool isSharedObj)
 	// Read file into string variable
 	//vmx = f.read();
 
-	logd("Patching file: " + name.filename().string());
+	Logger::debug("Patching file: " + name.filename().string());
 
 	// Setup hex string for vSMC headers
 	// These are the private and public key counts
@@ -231,52 +231,52 @@ void Patcher::patchSMC(fs::path name, bool isSharedObj)
 	memFile.clear();
 
 	// Print vSMC0 tables and keys
-	logd("appleSMCTableV0 (smc.version = \"0\")");
-	logd("appleSMCTableV0 Address      : " + hexRepresentation(smc_header_v0_offset));
-	logd("appleSMCTableV0 Private Key #: 0xF2/242");
-	logd("appleSMCTableV0 Public Key  #: 0xF0/240");
+	Logger::debug("appleSMCTableV0 (smc.version = \"0\")");
+	Logger::debug("appleSMCTableV0 Address      : " + hexRepresentation(smc_header_v0_offset));
+	Logger::debug("appleSMCTableV0 Private Key #: 0xF2/242");
+	Logger::debug("appleSMCTableV0 Public Key  #: 0xF0/240");
 
 	if ((smc_adr - smc_key0) != 72)
 	{
-		logd("appleSMCTableV0 Table        : " + hexRepresentation(smc_key0));
+		Logger::debug("appleSMCTableV0 Table        : " + hexRepresentation(smc_key0));
 		auto res = patchKeys(i_file, smc_key0);
 		smc_old_memptr = res.first;
 		smc_new_memptr = res.second;
 	}
 	else if ((smc_adr - smc_key1) != 72)
 	{
-		logd("appleSMCTableV0 Table        : " + hexRepresentation(smc_key1));
+		Logger::debug("appleSMCTableV0 Table        : " + hexRepresentation(smc_key1));
 		auto res = patchKeys(i_file, smc_key1);
 		smc_old_memptr = res.first;
 		smc_new_memptr = res.second;
 	}
-	logd("");
+	Logger::debug("");
 
 	// Print vSMC1 tables and keys
-	logd("appleSMCTableV1 (smc.version = \"1\")");
-	logd("appleSMCTableV1 Address      : " + hexRepresentation(smc_header_v1_offset));
-	logd("appleSMCTableV1 Private Key #: 0x01B4/436");
-	logd("appleSMCTableV1 Public Key  #: 0x01B0/432");
+	Logger::debug("appleSMCTableV1 (smc.version = \"1\")");
+	Logger::debug("appleSMCTableV1 Address      : " + hexRepresentation(smc_header_v1_offset));
+	Logger::debug("appleSMCTableV1 Private Key #: 0x01B4/436");
+	Logger::debug("appleSMCTableV1 Public Key  #: 0x01B0/432");
 	
 	if ((smc_adr - smc_key0) == 72)
 	{
-		logd("appleSMCTableV1 Table        : " + hexRepresentation(smc_key0));
+		Logger::debug("appleSMCTableV1 Table        : " + hexRepresentation(smc_key0));
 		auto res = patchKeys(i_file, smc_key0);
 		smc_old_memptr = res.first, smc_new_memptr = res.second;
 	}
 	else if ((smc_adr - smc_key1) == 72)
 	{
-		logd("appleSMCTableV1 Table        : " + hexRepresentation(smc_key1));
+		Logger::debug("appleSMCTableV1 Table        : " + hexRepresentation(smc_key1));
 		auto res = patchKeys(i_file, smc_key1);
 		smc_old_memptr = res.first, smc_new_memptr = res.second;
 	}
-	logd("");
+	Logger::debug("");
 
 	// Find matching RELA record in.rela.dyn in ESXi ELF files
 	// This is temporary code until proper ELF parsing written
 	if (isSharedObj)
 	{
-		logd("Modifying RELA records from: " + hexRepresentation(smc_old_memptr) + " to " + hexRepresentation(smc_new_memptr));
+		Logger::debug("Modifying RELA records from: " + hexRepresentation(smc_old_memptr) + " to " + hexRepresentation(smc_new_memptr));
 		patchElf(i_file, smc_old_memptr, smc_new_memptr);
 	}
 
@@ -318,13 +318,13 @@ std::pair<unsigned long long, unsigned long long> Patcher::patchKeys(std::fstrea
 		{
 			// Use the + LKS data routine for OSK0 / 1
 			smc_new_memptr = smc_key.Q4;
-			logd("+LKS Key: ");
+			Logger::debug("+LKS Key: ");
 			printkey(i, offset, smc_key, smc_data); // too lazy for this one - but I coded it eventually
 		}
 		else if (cmpcarr(smc_key_0, cmp1.data(), 4))
 		{
 			//Write new data routine pointer from + LKS
-			logd("OSK0 Key Before:");
+			Logger::debug("OSK0 Key Before:");
 			printkey(i, offset, smc_key, smc_data);
 			// smc_old_memptr = smc_key[4]
 			file.clear();
@@ -355,13 +355,13 @@ std::pair<unsigned long long, unsigned long long> Patcher::patchKeys(std::fstrea
 			smc_data.clear();
 			smc_data.resize(smc_key.B1);
 			file.read(smc_data.data(), smc_key.B1);
-			logd("OSK0 Key After:");
+			Logger::debug("OSK0 Key After:");
 			printkey(i, offset, smc_key, smc_data);
 		}
 		else if (cmpcarr(smc_key.s0, cmp2.data(), 4))
 		{
 			// Write new data routine pointer from + LKS
-			logd("OSK1 Key Before:");
+			Logger::debug("OSK1 Key Before:");
 			printkey(i, offset, smc_key, smc_data);
 			unsigned long long smc_old_memptr = smc_key.Q4;
 			
@@ -396,7 +396,7 @@ std::pair<unsigned long long, unsigned long long> Patcher::patchKeys(std::fstrea
 			smc_data.resize(smc_key.B1);
 			file.read(smc_data.data(), smc_key.B1);
 
-			logd("OSK1 Key After:");
+			Logger::debug("OSK1 Key After:");
 			printkey(i, offset, smc_key, smc_data);
 
 			// Finished so get out of loop
@@ -412,7 +412,7 @@ void Patcher::patchBase(fs::path name)
 {
 
 	//Patch file
-	logd("GOS Patching: " + name.filename().string());
+	Logger::debug("GOS Patching: " + name.filename().string());
 	std::fstream file(name, std::ios_base::binary | std::ios_base::in | std::ios_base::out);
 	if (!file.good())
 		throw PatchException("Couldn't open file %s", name.string().c_str());
@@ -423,7 +423,7 @@ void Patcher::patchBase(fs::path name)
 	std::vector<char> memFile = readFile(file);
 	// REGEX WAY --- Seems to not work 
 
-	logv("Patching through REGEX");
+	Logger::verbose("Patching through REGEX");
 	std::regex darwin = std::regex(DARWIN_REGEX);
 	std::string buf;
 	buf.resize(32);
@@ -450,7 +450,7 @@ void Patcher::patchBase(fs::path name)
 		file.seekg(pos + 32);
 
 		file.put(flag);
-		logd("GOS Patched flag @: " + hexRepresentation(pos));
+		Logger::debug("GOS Patched flag @: " + hexRepresentation(pos));
 
 		occurrences++;
 	}
@@ -496,12 +496,12 @@ void Patcher::patchBase(fs::path name)
 	file.flush();
 	file.close();
 
-	logd("GOS Patched: " + name.filename().string());
+	Logger::debug("GOS Patched: " + name.filename().string());
 }
 
 void Patcher::patchVmkctl(fs::path name)
 {	
-	logd("smcPresent Patching: " + name.filename().string());
+	Logger::debug("smcPresent Patching: " + name.filename().string());
 	std::fstream file(name, std::ios_base::in | std::ios_base::out);
 	
 	std::string find_str = VMKCTL_FIND_STR;
@@ -519,8 +519,9 @@ void Patcher::patchVmkctl(fs::path name)
 		file.flush();
 		file.close();
 	}
-	else
+	else {
 		throw PatchException("Couldn't find Vmkctl offset");
+	}
 }
 
 void Patcher::patchElf(std::fstream& file, long long oldoffset, long long newoffset)
@@ -551,7 +552,7 @@ void Patcher::patchElf(std::fstream& file, long long oldoffset, long long newoff
 	file.read(reinterpret_cast<char*>(&e_shnum), sizeof(unsigned short));
 	file.read(reinterpret_cast<char*>(&e_shstrndx), sizeof(unsigned short));
 
-	logd("e_shoff: 0x%02llX e_shentsize: 0x%02X e_shnum:0x%02X e_shstrndx:0x%02X\n", e_shoff, e_shentsize,
+	Logger::debug("e_shoff: 0x%02llX e_shentsize: 0x%02X e_shnum:0x%02X e_shstrndx:0x%02X\n", e_shoff, e_shentsize,
 		e_shnum, e_shstrndx);
 
 	for (unsigned short i = 0; i < e_shnum; i++)
@@ -587,7 +588,7 @@ void Patcher::patchElf(std::fstream& file, long long oldoffset, long long newoff
 					towr.Q2 = r_info;
 					towr.q3 = r_addend;
 					file.write(reinterpret_cast<char*>(&towr), sizeof(QQq));
-					logd("Relocation modified at: " + hexRepresentation(e_sh_offset + e_sh_entsize * j));
+					Logger::debug("Relocation modified at: " + hexRepresentation(e_sh_offset + e_sh_entsize * j));
 				}
 			}
 		}

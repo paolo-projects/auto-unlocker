@@ -32,7 +32,7 @@ bool ToolsDownloader::downloadStandalone(const fs::path& to)
 	std::string tools_diskpath = (temppath / FUSION_DEF_TOOLS_NAME).string();
 	std::string toolspre15_diskpath = (temppath / FUSION_DEF_PRE15_TOOLS_NAME).string();
 
-	logd("Downloading tools from " + toolsurl + " and " + tools_pre15_url);
+	Logger::debug("Downloading tools from " + toolsurl + " and " + tools_pre15_url);
 
 	try {
 		network.curlDownload(toolsurl, tools_diskpath);
@@ -44,7 +44,7 @@ bool ToolsDownloader::downloadStandalone(const fs::path& to)
 
 		if (!success)
 		{
-			logerr("Couldn't extract zip files from tars");
+			Logger::error("Couldn't extract zip files from tars");
 			return false;
 		}
 
@@ -57,7 +57,7 @@ bool ToolsDownloader::downloadStandalone(const fs::path& to)
 
 		if (!success)
 		{
-			logerr("Couldn't extract tools from zip files");
+			Logger::error("Couldn't extract tools from zip files");
 			return false;
 		}
 
@@ -67,7 +67,7 @@ bool ToolsDownloader::downloadStandalone(const fs::path& to)
 	}
 	catch (const NetworkException& exc) {
 		if (exc.getCode() == CURLE_HTTP_RETURNED_ERROR) {
-			logd("Tools not found as standalone");
+			Logger::debug("Tools not found as standalone");
 			return false;
 		}
 		else {
@@ -86,25 +86,25 @@ bool ToolsDownloader::downloadFromCore(const fs::path& to)
 	std::string coreurl = buildurl + FUSION_DEF_CORE_LOC;
 	std::string core_diskpath = (temppath / FUSION_DEF_CORE_NAME).string();
 
-	logd("Downloading core tar from " + coreurl);
+	Logger::debug("Downloading core tar from " + coreurl);
 
 	try
 	{
 		network.curlDownload(coreurl, core_diskpath);
 
 		// If the core package was successfully downloaded, extract the tools from it
-		logd("Extracting from .tar to temp folder ...");
+		Logger::debug("Extracting from .tar to temp folder ...");
 
 		fs::path temppath = fs::temp_directory_path();
 
 		bool success = Archive::extractTar(temppath / FUSION_DEF_CORE_NAME, FUSION_DEF_CORE_NAME_ZIP, temppath / FUSION_DEF_CORE_NAME_ZIP);
 		if (!success) {
-			logerr("Couldn't extract from the tar file");
+			Logger::error("Couldn't extract from the tar file");
 			// Error in the tar file, try the next version number
 			return false;
 		}
 
-		logd("Extracting from .zip to destination folder ...");
+		Logger::debug("Extracting from .zip to destination folder ...");
 
 		success = Archive::extractZip(temppath / FUSION_DEF_CORE_NAME_ZIP, FUSION_ZIP_TOOLS_ISO, to / FUSION_ZIP_TOOLS_NAME);
 		success &= Archive::extractZip(temppath / FUSION_DEF_CORE_NAME_ZIP, FUSION_ZIP_PRE15_TOOLS_ISO, to / FUSION_ZIP_PRE15_TOOLS_NAME);
@@ -113,7 +113,7 @@ bool ToolsDownloader::downloadFromCore(const fs::path& to)
 		fs::remove(temppath / FUSION_DEF_CORE_NAME_ZIP);
 
 		if (!success) {
-			logerr("Couldn't extract from the zip file"); // Error in the zip file, try the next version number
+			Logger::error("Couldn't extract from the zip file"); // Error in the zip file, try the next version number
 			return false;
 		}
 
@@ -122,7 +122,7 @@ bool ToolsDownloader::downloadFromCore(const fs::path& to)
 	}
 	catch (const NetworkException& exc) {
 		if (exc.getCode() == CURLE_HTTP_RETURNED_ERROR) {
-			logd("Couldn't download tools from this version number. Trying the next one");
+			Logger::debug("Couldn't download tools from this version number. Trying the next one");
 			return false;
 		}
 		else {

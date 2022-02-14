@@ -1,24 +1,17 @@
 #include "debug.h"
 
-#ifdef _WIN32
-WORD defAttrs;
-bool hasDefAttrs = false;
-#endif
+void Logger::init(LogStrategy* strategy)
+{
+	Logger::instance = std::make_unique<Logger>(strategy);
+}
 
-void logv(std::string msg)
+void Logger::verbose(std::string msg)
 {
 #if LOGLEVEL >= LOGLEVEL_VERBOSE
-#ifdef _WIN32
-	setTerminalColor(FOREGROUND_RED | FOREGROUND_GREEN);
-	std::cout << msg;
-	resetTerminalColor();
-	std::cout << std::endl;
-#else
-	std::cout << ANSI_COLOR_BLUE << msg << ANSI_COLOR_RESET << std::endl;
-#endif
+	Logger::instance->logStrategy->verbose(msg.c_str());
 #endif
 }
-void logv(const char* msg, ...)
+void Logger::verbose(const char* msg, ...)
 {
 #if LOGLEVEL >= LOGLEVEL_VERBOSE
 	va_list args;
@@ -26,60 +19,39 @@ void logv(const char* msg, ...)
 	char fmt[1024];
 	vsprintf(fmt, msg, args);
 
-#ifdef _WIN32
-	setTerminalColor(FOREGROUND_RED | FOREGROUND_GREEN);
-	printf("%s", fmt);
-	resetTerminalColor();
-	printf("\n");
-#else
-	printf(ANSI_COLOR_BLUE "%s" ANSI_COLOR_RESET "\n", fmt);
-#endif
+	Logger::instance->logStrategy->verbose(fmt);
 
 	va_end(args);
 #endif
 }
 
-void logd(std::string msg)
+void Logger::debug(std::string msg)
 {
-#if LOGLEVEL > 0
-#ifdef _WIN32
-	setTerminalColor(FOREGROUND_BLUE | FOREGROUND_GREEN);
-	std::cout << msg;
-	resetTerminalColor();
-	std::cout << std::endl;
-#else
-	std::cout << ANSI_COLOR_CYAN << msg << ANSI_COLOR_RESET << std::endl;
-#endif
+#if LOGLEVEL > LOGLEVEL_DEBUG
+	Logger::instance->logStrategy->debug(msg.c_str());
 #endif
 }
-void logd(const char* msg, ...)
+void Logger::debug(const char* msg, ...)
 {
-#if LOGLEVEL > 0
+#if LOGLEVEL > LOGLEVEL_DEBUG
 	va_list args;
 	va_start(args, msg);
 	char fmt[1024];
 	vsprintf(fmt, msg, args);
-
-#ifdef _WIN32
-	setTerminalColor(FOREGROUND_BLUE | FOREGROUND_GREEN);
-	printf("%s", fmt);
-	resetTerminalColor();
-	printf("\n");
-#else
-	printf(ANSI_COLOR_CYAN "%s" ANSI_COLOR_RESET "\n", fmt);
-#endif
+	
+	Logger::instance->logStrategy->debug(fmt);
 
 	va_end(args);
 #endif
 }
 
-void logi(std::string msg)
+void Logger::info(std::string msg)
 {
 #if LOGLEVEL >= LOGLEVEL_INFO
-	std::cout << msg << std::endl;
+	Logger::instance->logStrategy->info(msg.c_str());
 #endif
 }
-void logi(const char* msg, ...)
+void Logger::info(const char* msg, ...)
 {
 #if LOGLEVEL >= LOGLEVEL_INFO
 	va_list args;
@@ -87,65 +59,88 @@ void logi(const char* msg, ...)
 	char fmt[1024];
 	vsprintf(fmt, msg, args);
 
-	printf("%s\n", fmt);
+	Logger::instance->logStrategy->info(fmt);
 
 	va_end(args);
 #endif
 }
 
-void logerr(std::string err)
+void Logger::error(std::string err)
 {
-#ifdef _WIN32
-	setTerminalColor(FOREGROUND_RED, true);
-	std::cerr << err;
-	resetTerminalColor(true);
-	std::cerr << std::endl;
-#else
-	std::cerr << ANSI_COLOR_RED << err << ANSI_COLOR_RESET << std::endl;
-#endif
+	Logger::instance->logStrategy->error(err.c_str());
 }
-void logerr(const char* msg, ...)
+void Logger::error(const char* msg, ...)
 {
 	va_list args;
 	va_start(args, msg);
 	char fmt[1024];
 	vsprintf(fmt, msg, args);
 
-#ifdef _WIN32
-	setTerminalColor(FOREGROUND_RED, true);
-	fprintf(stderr, "%s", fmt);
-	resetTerminalColor(true);
-	fprintf(stderr, "\n");
-#else
-	fprintf(stderr, ANSI_COLOR_RED "%s" ANSI_COLOR_RESET "\n", fmt);
-#endif
+	Logger::instance->logStrategy->error(fmt);
 
 	va_end(args);
 }
 
 #ifdef _WIN32
-void setTerminalColor(WORD tAttribute, bool isStderr)
+void Logger::printDebug(const char* fmt, ...)
 {
-	if (!hasDefAttrs)
-	{
-		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-		CONSOLE_SCREEN_BUFFER_INFO bInfo = {};
-		GetConsoleScreenBufferInfo(hConsole, &bInfo);
-		defAttrs = bInfo.wAttributes;
-		hasDefAttrs = true;
-	}
+	char message[2048];
+	va_list args;
+	va_start(args, fmt);
+	vsprintf(message, fmt, args);
+	va_end(args);
 
-	WORD newAttrs = defAttrs & ~FOREGROUND_GREEN & ~FOREGROUND_BLUE & ~FOREGROUND_RED;
-	newAttrs |= tAttribute;
-	HANDLE hConsole = GetStdHandle(isStderr ? STD_ERROR_HANDLE : STD_OUTPUT_HANDLE);
-	SetConsoleTextAttribute(hConsole, newAttrs);
-}
-
-void resetTerminalColor(bool isStderr)
-{
-	if (hasDefAttrs) {
-		HANDLE hConsole = GetStdHandle(isStderr ? STD_ERROR_HANDLE : STD_OUTPUT_HANDLE);
-		SetConsoleTextAttribute(hConsole, defAttrs);
-	}
+	OutputDebugStringA(message);
 }
 #endif
+
+Logger::Logger(LogStrategy* strategy)
+	: logStrategy(strategy)
+{
+
+}
+
+void TerminalLogStrategy::verbose(const char* message)
+{
+	printf(ANSI_COLOR_BLUE "%s" ANSI_COLOR_RESET "\n", message);
+}
+
+void TerminalLogStrategy::debug(const char* message)
+{
+	printf(ANSI_COLOR_CYAN "%s" ANSI_COLOR_RESET "\n", message);
+}
+
+void TerminalLogStrategy::info(const char* message)
+{
+	printf("%s\n", message);
+}
+
+void TerminalLogStrategy::error(const char* message)
+{
+	fprintf(stderr, ANSI_COLOR_RED "%s" ANSI_COLOR_RESET "\n", message);
+}
+
+StreamLogStrategy::StreamLogStrategy(std::iostream& stream)
+	: stream(stream)
+{
+}
+
+void StreamLogStrategy::verbose(const char* message)
+{
+	stream << "::VERBOSE " << message << std::endl;
+}
+
+void StreamLogStrategy::debug(const char* message)
+{
+	stream << "::DEBUG " << message << std::endl;
+}
+
+void StreamLogStrategy::info(const char* message)
+{
+	stream << "::INFO " << message << std::endl;
+}
+
+void StreamLogStrategy::error(const char* message)
+{
+	stream << "::ERROR " << message << std::endl;
+}
