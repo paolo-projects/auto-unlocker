@@ -7,9 +7,22 @@ bool registerControlStyles(DWORD style);
 #endif
 
 #include <iostream>
+#include "config.h"
 #include "unlocker.h"
 
 #ifdef __linux__
+#include "logging/terminallogstrategy.h"
+
+void showhelp()
+{
+	std::cout << "auto-unlocker " << PROG_VERSION << std::endl << std::endl
+		<< "Run the program with one of these options:" << std::endl
+		<< "	--install (default): install the patch" << std::endl
+		<< "	--uninstall: remove the patch" << std::endl
+		<< "	--download-tools: only download the tools" << std::endl
+		<< "	--help: show this help message" << std::endl;
+}
+
 int main(int argc, const char* argv[])
 {
 	TerminalLogStrategy logStrategy;
@@ -80,6 +93,7 @@ int main(int argc, const char* argv[])
 	system("pause");
 #endif
 
+	Logger::free();
 	return 0;
 }
 #elif defined _WIN32

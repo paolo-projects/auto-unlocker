@@ -41,7 +41,7 @@ LRESULT Window::WindowProc(HWND hWnd, UINT uMSG, WPARAM wParam, LPARAM lParam)
 	case WM_COMMAND:
 		switch (HIWORD(wParam)) {
 		case BN_CLICKED:
-			printDebug("Button click ID: %d\n", LOWORD(wParam));
+			Logger::printWinDebug("Button click ID: %d\n", LOWORD(wParam));
 			for (const auto& val : window->controls) 
 			{
 				if (val.first == LOWORD(wParam) && val.second != nullptr) {

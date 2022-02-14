@@ -34,15 +34,19 @@ class Network
 public:
 	Network();
 	~Network();
+	void setProgressCallback(std::function<void(float)> progressCallback);
 	void curlDownload(const std::string& url, const std::string& fileName);
 	std::string curlGet(const std::string& url);
 private:
 	static constexpr double mBytesProgressUpdateDelta = 0.1; // 0.1 MB
 	static constexpr long long updatePeriodMs = 200; // update every 100ms
 
+	std::function<void(float)> progressCallback = nullptr;
+
 	NetworkProgress networkProgress = {};
 	static size_t write_data_file(char* ptr, size_t size, size_t nmemb, void* stream);
 	static int progress_callback(void* clientp, double dltotal, double dlnow, double ultotal, double ulnow);
+	static int progress_callback_external(void* clientp, double dltotal, double dlnow, double ultotal, double ulnow);
 };
 
 #endif // NETUTILS_H

@@ -5,6 +5,8 @@
 #include <iostream>
 #include <stdarg.h>
 #include "colors.h"
+#include "win32/controls/statusbar.h"
+#include "logging/logstrategy.h"
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -15,41 +17,11 @@
 #define LOGLEVEL_INFO 1
 #define LOGLEVEL_NONE 0
 
-class LogStrategy
-{
-public:
-	virtual void verbose(const char* message) = 0;
-	virtual void debug(const char* message) = 0;
-	virtual void info(const char* message) = 0;
-	virtual void error(const char* message) = 0;
-};
-
-class TerminalLogStrategy : public LogStrategy
-{
-public:
-	virtual void verbose(const char* message) override;
-	virtual void debug(const char* message) override;
-	virtual void info(const char* message) override;
-	virtual void error(const char* message) override;
-};
-
-class StreamLogStrategy : public LogStrategy
-{
-public:
-	StreamLogStrategy(std::iostream& stream);
-
-	virtual void verbose(const char* message) override;
-	virtual void debug(const char* message) override;
-	virtual void info(const char* message) override;
-	virtual void error(const char* message) override;
-private:
-	std::iostream& stream;
-};
-
 class Logger
 {
 public:
 	static void init(LogStrategy* strategy);
+	static void free();
 
 	static void verbose(std::string msg);
 	static void verbose(const char* msg, ...);
@@ -63,12 +35,13 @@ public:
 	static void error(std::string err);
 	static void error(const char* err, ...);
 
-	static void printDebug(const char* fmt, ...);
-
+#ifdef _WIN32
+	static void printWinDebug(const char* fmt, ...);
+#endif
 private:
 	Logger(LogStrategy* strategy);
 
-	static std::unique_ptr<Logger> instance;
+	static Logger* instance;
 	LogStrategy* logStrategy;
 };
 

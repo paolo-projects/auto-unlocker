@@ -51,7 +51,12 @@ set (SOURCE_FILES src/unlocker.cpp /
 				src/tar.cpp /
 				src/main.cpp /
 				src/ziparchive.cpp /
-				src/toolsdownloader.cpp)
+				src/toolsdownloader.cpp /
+				src/logging/combinedlogstrategy.cpp /
+				src/logging/terminallogstrategy.cpp /
+				src/logging/streamlogstrategy.cpp /
+				src/logging/logstrategy.cpp /
+)
 
 if(WIN32)
 	set (SOURCE_FILES ${SOURCE_FILES} /
@@ -64,6 +69,9 @@ if(WIN32)
 					src/win32/controls/progress.cpp /
 					src/win32/controls/groupbox.cpp /
 					src/win32/controls/checkbox.cpp /
+					src/win32/controls/statusbar.cpp /
+					src/win32/patcherthread.cpp /
+					src/logging/statusbarlogstrategy.cpp /
 	)
 endif()
 

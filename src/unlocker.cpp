@@ -36,7 +36,9 @@ void install()
 	preparePatch(backup);
 
 	Logger::info("Patching files...");
-	doPatch();
+	VMWareInfoRetriever vmwareInfo;
+
+	doPatch(fs::path(vmwareInfo.getInstallPath()), fs::path(vmwareInfo.getInstallPath64()));
 
 	Logger::info("Downloading tools into \"" + toolsdirectory.string() + "\" directory...");
 
@@ -59,7 +61,11 @@ void install()
 	Logger::info("Patch complete.");
 }
 
+#ifdef _WIN32
+void uninstall(const fs::path& vmwareInstallDir, const fs::path& vmwareInstallDir64)
+#else
 void uninstall()
+#endif
 {
 #ifdef _WIN32
 	VMWareInfoRetriever vmInfo;
@@ -72,8 +78,8 @@ void uninstall()
 	// Default backup path is ./backup/
 	fs::path backup = fs::path(".") / BACKUP_FOLDER;
 
-	fs::path vmwareInstallDir = vmInfo.getInstallPath();
-	fs::path vmwareInstallDir64 = vmInfo.getInstallPath64();
+	//fs::path vmwareInstallDir = vmInfo.getInstallPath();
+	//fs::path vmwareInstallDir64 = vmInfo.getInstallPath64();
 
 	Logger::info("Restoring files...");
 	// Copy contents of backup/
@@ -221,16 +227,6 @@ void uninstall()
 #endif
 }
 
-void showhelp()
-{
-	std::cout << "auto-unlocker" << std::endl << std::endl
-		<< "Run the program with one of these options:" << std::endl
-		<< "	--install (default): install the patch" << std::endl
-		<< "	--uninstall: remove the patch" << std::endl
-		<< "	--download-tools: only download the tools" << std::endl
-		<< "	--help: show this help message" << std::endl;
-}
-
 // Other methods
 
 // Copy tools to VMWare directory
@@ -278,16 +274,20 @@ void copyTools(fs::path toolspath)
 }
 
 // Actual patch code
+#ifdef _WIN32
+void doPatch(const fs::path& vmwareInstallPath, const fs::path& vmwareInstallPath64)
+#else
 void doPatch()
+#endif
 {
 #ifdef _WIN32
 	// Setup paths
-	VMWareInfoRetriever vmInfo;
+	//VMWareInfoRetriever vmInfo;
 
 	std::string binList[] = VM_WIN_PATCH_FILES;
 
-	fs::path vmwarebase_path = vmInfo.getInstallPath();
-	fs::path vmx_path = vmInfo.getInstallPath64();
+	fs::path vmwarebase_path = vmwareInstallPath;//vmInfo.getInstallPath();
+	fs::path vmx_path = vmwareInstallPath64;//vmInfo.getInstallPath64();
 	fs::path vmx = vmx_path / binList[0];
 	fs::path vmx_debug = vmx_path / binList[1];
 	fs::path vmx_stats = vmx_path / binList[2];
@@ -535,9 +535,14 @@ void preparePatch(fs::path backupPath)
 }
 
 // Download tools into "path"
-bool downloadTools(fs::path path)
+bool downloadTools(fs::path path, std::function<void(float)> progressCallback)
 {
 	Network network;
+
+	if (progressCallback != nullptr)
+	{
+		network.setProgressCallback(progressCallback);
+	}
 
 	fs::path temppath = fs::temp_directory_path(); // extract files in the temp folder first
 

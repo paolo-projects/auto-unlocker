@@ -12,6 +12,11 @@ Network::~Network() {
 	curl_global_cleanup();
 }
 
+void Network::setProgressCallback(std::function<void(float)> progressCallback)
+{
+	this->progressCallback = progressCallback;
+}
+
 /**
 	Writes data received from Curl to a stream
 */
@@ -55,6 +60,13 @@ int Network::progress_callback(void* clientp, double dltotal, double dlnow, doub
 	return 0;
 }
 
+int Network::progress_callback_external(void* clientp, double dltotal, double dlnow, double ultotal, double ulnow)
+{
+	Network* instance = reinterpret_cast<Network*>(clientp);
+	instance->progressCallback(dlnow / dltotal);
+	return 0;
+}
+
 void Network::curlDownload(const std::string& url, const std::string& fileName)
 {
 	CURL* curl = curl_easy_init();
@@ -77,8 +89,16 @@ void Network::curlDownload(const std::string& url, const std::string& fileName)
 		/* if response is >400, return an error */
 		curl_easy_setopt(curl, CURLOPT_FAILONERROR, true);
 		/* progress monitoring function */
-		curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, &networkProgress);
-		curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, Network::progress_callback);
+		if (progressCallback != nullptr) 
+		{
+			curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, this);
+			curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, Network::progress_callback_external);
+		}
+		else 
+		{
+			curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, &networkProgress);
+			curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, Network::progress_callback);
+		}
 		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0);
 		/* get it! */
 		networkProgress.mBytesDownloadedLastTime = 0.0;

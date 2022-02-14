@@ -24,11 +24,12 @@ void MainWindow::onCreate(HWND hWnd)
 	toolsGroup = std::make_unique<GroupBox>(hWnd, "Tools", 10, 140, 410, 135);
 	downloadToolsChk = std::make_unique<CheckBox>(hWnd, IDC_DOWNLOADTOOLS_CHECKBOX, "Download tools", 20, 160, 400, 30);
 	toolsPathLabel = std::make_unique<Label>(hWnd, NULL, "Tools location:", 20, 200, 400, 15);
-	toolsPathEditBox = std::make_unique<EditBox>(hWnd, IDC_TOOLSPATH_EDITBOX, toolsDefLoc.c_str(), 20, 235, 300, 30);
-	toolsBrowseBtn = std::make_unique<Button>(hWnd, IDC_TOOLSPATH_BROWSE_BTN, "Browse", 340, 225, 70, 30);
+	toolsPathEditBox = std::make_unique<EditBox>(hWnd, IDC_TOOLSPATH_EDITBOX, toolsDefLoc.c_str(), 20, 225, 300, 30);
+	toolsBrowseBtn = std::make_unique<Button>(hWnd, IDC_TOOLSPATH_BROWSE_BTN, "Browse", 330, 225, 80, 30);
 	patchBtn = std::make_unique<Button>(hWnd, IDC_PATCH_BTN, "Patch", 10, 285, 100, 30);
 	revertPatchBtn = std::make_unique<Button>(hWnd, IDC_REVERT_PATCH_BTN, "Revert patch", 115, 285, 100, 30);
 	progressBar = std::make_unique<Progress>(hWnd, IDC_PROGRESSBAR, 10, 325, 410, 25);
+	statusBar = std::make_unique<StatusBar>(hWnd, IDC_STATUSBAR, "Hello");
 
 	// Initial controls setup
 	pathEditBox->setReadOnly(true);
@@ -116,15 +117,60 @@ void MainWindow::downloadToolsChkClick()
 
 void MainWindow::patchBtnClick()
 {
+	disableAllInput();
 
+	patcherThread = new PatcherThread(*this);
+
+	patcherThread->setOnProgressCallback(std::bind(&MainWindow::patchProgress, this, std::placeholders::_1));
+	patcherThread->setOnCompleteCallback(std::bind(&MainWindow::patchComplete, this, std::placeholders::_1));
+				 
+	patcherThread->execute();
 }
 
 void MainWindow::revertPatchBtnClick()
 {
+	disableAllInput();
+}
+
+void MainWindow::disableAllInput()
+{
+	browseButton->setEnabled(false);
+	pathEditBox->setEnabled(false);
+	browseButtonX64->setEnabled(false);
+	pathEditBoxX64->setEnabled(false);
+	downloadToolsChk->setEnabled(false);
+	toolsPathEditBox->setEnabled(false);
+	toolsBrowseBtn->setEnabled(false);
+	patchBtn->setEnabled(false);
+	revertPatchBtn->setEnabled(false);
+}
+
+void MainWindow::patchComplete(PatchResult result)
+{
+	if (result.result) {
+		MessageBox(hWnd, "The patch has been installed successfully. Refer to the log file that has been created in the program directory for the details.", 
+			"Success", MB_OK | MB_ICONINFORMATION);
+	}
+	else {
+		char msg[4096];
+		sprintf(msg, "An error occurred while applying the patch:\n%s\nCheck the log file created in the program directory for detailed info", result.errorMessage.c_str());
+		MessageBox(hWnd, msg, "Error", MB_OK | MB_ICONERROR);
+	}
+
+	if (patcherThread != nullptr)
+	{
+		delete patcherThread;
+		patcherThread = nullptr;
+	}
+}
+
+void MainWindow::patchProgress(float progress)
+{
+	progressBar->setProgress((int)(progress * 100));
 }
 
 MainWindow::MainWindow(HINSTANCE hInstance, int nCmdShow)
-	: Window(hInstance, nCmdShow, "auto-unlocker-mainwindow", "Auto-Unlocker " PROG_VERSION, CW_USEDEFAULT, CW_USEDEFAULT, 450, 400)
+	: Window(hInstance, nCmdShow, "auto-unlocker-mainwindow", "Auto-Unlocker " PROG_VERSION, CW_USEDEFAULT, CW_USEDEFAULT, 450, 420)
 {
 }
 

@@ -32,14 +32,19 @@
 // Forward declarations
 
 void preparePatch(fs::path backupPath);
-void doPatch();
-bool downloadTools(fs::path path);
+bool downloadTools(fs::path path, std::function<void(float)> progressCallback = nullptr);
 void copyTools(fs::path toolspath);
 void stopServices();
 void restartServices();
 
 void install();
+
+#ifdef _WIN32
+void doPatch(const fs::path& vmwareInstallPath, const fs::path& vmwareInstallPath64);
+void uninstall(const fs::path& vmwareInstallPath, const fs::path& vmwareInstallPath64);
+#else
+void doPatch();
 void uninstall();
-void showhelp();
+#endif
 
 #endif // UNLOKER_H

@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <memory>
 #include <functional>
+#include "filesystem.hpp"
 
 #include "config.h"
 #include "controls/button.h";
@@ -16,9 +17,12 @@
 #include "controls/progress.h"
 #include "controls/groupbox.h"
 #include "controls/checkbox.h"
+#include "controls/statusbar.h"
+#include "patcherthread.h"
 #include "resources.h"
 
 #include "installinfo.h"
+#include "unlocker.h"
 
 class MainWindow : public Window
 {
@@ -26,7 +30,7 @@ public:
 	MainWindow(HINSTANCE hInstance, int nCmdShow);
 	~MainWindow();
 	virtual void onCreate(HWND hWnd) override;
-private:
+
 	std::unique_ptr<Label> browseLabel = nullptr;
 	std::unique_ptr<Button> browseButton = nullptr;
 	std::unique_ptr<EditBox> pathEditBox = nullptr;
@@ -41,13 +45,21 @@ private:
 	std::unique_ptr<Button> toolsBrowseBtn = nullptr;
 	std::unique_ptr<Button> patchBtn = nullptr;
 	std::unique_ptr<Button> revertPatchBtn = nullptr;
+	std::unique_ptr<StatusBar> statusBar = nullptr;
 
+private:
 	void browseButtonClick();
 	void browseX64ButtonClick();
 	void toolsBrowseButtonClick();
 	void downloadToolsChkClick();
 	void patchBtnClick();
 	void revertPatchBtnClick();
+
+	void disableAllInput();
+	void patchComplete(PatchResult result);
+	void patchProgress(float progress);
+
+	PatcherThread* patcherThread = nullptr;
 };
 
 #endif // MAINWINDOW_H

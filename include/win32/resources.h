@@ -15,5 +15,6 @@
 #define IDC_PATCH_BTN 61
 #define IDC_REVERT_PATCH_BTN 62
 #define IDC_PROGRESSBAR 63
+#define IDC_STATUSBAR 64
 
 #endif

@@ -1,8 +1,15 @@
 #include "debug.h"
 
+Logger* Logger::instance = nullptr;
+
 void Logger::init(LogStrategy* strategy)
 {
-	Logger::instance = std::make_unique<Logger>(strategy);
+	Logger::instance = new Logger(strategy);
+}
+
+void Logger::free()
+{
+	delete Logger::instance;
 }
 
 void Logger::verbose(std::string msg)
@@ -82,7 +89,7 @@ void Logger::error(const char* msg, ...)
 }
 
 #ifdef _WIN32
-void Logger::printDebug(const char* fmt, ...)
+void Logger::printWinDebug(const char* fmt, ...)
 {
 	char message[2048];
 	va_list args;
@@ -98,49 +105,4 @@ Logger::Logger(LogStrategy* strategy)
 	: logStrategy(strategy)
 {
 
-}
-
-void TerminalLogStrategy::verbose(const char* message)
-{
-	printf(ANSI_COLOR_BLUE "%s" ANSI_COLOR_RESET "\n", message);
-}
-
-void TerminalLogStrategy::debug(const char* message)
-{
-	printf(ANSI_COLOR_CYAN "%s" ANSI_COLOR_RESET "\n", message);
-}
-
-void TerminalLogStrategy::info(const char* message)
-{
-	printf("%s\n", message);
-}
-
-void TerminalLogStrategy::error(const char* message)
-{
-	fprintf(stderr, ANSI_COLOR_RED "%s" ANSI_COLOR_RESET "\n", message);
-}
-
-StreamLogStrategy::StreamLogStrategy(std::iostream& stream)
-	: stream(stream)
-{
-}
-
-void StreamLogStrategy::verbose(const char* message)
-{
-	stream << "::VERBOSE " << message << std::endl;
-}
-
-void StreamLogStrategy::debug(const char* message)
-{
-	stream << "::DEBUG " << message << std::endl;
-}
-
-void StreamLogStrategy::info(const char* message)
-{
-	stream << "::INFO " << message << std::endl;
-}
-
-void StreamLogStrategy::error(const char* message)
-{
-	stream << "::ERROR " << message << std::endl;
 }
