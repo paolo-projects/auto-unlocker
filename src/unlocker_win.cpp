@@ -177,7 +177,7 @@ void copyTools(fs::path toolspath, fs::path copyTo)
 }
 
 // Download tools into "path"
-bool downloadTools(fs::path path, std::function<void(float)> progressCallback)
+bool downloadTools(fs::path path, std::function<void(double, double, double, double)> progressCallback)
 {
 	Network network;
 

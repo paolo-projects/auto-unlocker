@@ -20,7 +20,7 @@
 
 #include <stdio.h>
 
-bool downloadTools(fs::path path, std::function<void(float)> progressCallback = nullptr);
+bool downloadTools(fs::path path, std::function<void(double, double, double, double)> progressCallback = nullptr);
 void copyTools(fs::path toolspath, fs::path copyTo);
 
 void preparePatchWin(fs::path backupPath, fs::path vmInstallPath);

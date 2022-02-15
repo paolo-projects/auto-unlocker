@@ -23,10 +23,24 @@ void DownloadToolsTask::onProgressUpdate(float progress)
 	}
 }
 
-void DownloadToolsTask::downloadProgress(float progress)
+void DownloadToolsTask::downloadProgress(double dltotal, double dlnow, double ultotal, double ulnow)
 {
-	if (progress > 0.f && progress < 1.f) {
-		postProgress(progress);
+	static char statusBarProgress[1024];
+
+	using namespace std::chrono;
+	milliseconds tTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+	long long tDelta = (tTime - lastProgressUpdate).count();
+
+	if (dltotal > 0 && tDelta > PROG_PERIOD_MS) {
+		double dlDelta = dlnow - lastDlNow;
+		float downloadPercent = dlnow / dltotal;
+
+		postProgress(downloadPercent);
+
+		sprintf(statusBarProgress, "Downloading: %.0f %%, %.3f MB/s", downloadPercent * 100, (dlDelta * 1000) / (tDelta * 1024 * 1024));
+		mainWindow.statusBar->setText(statusBarProgress);
+		lastProgressUpdate = tTime;
+		lastDlNow = dlnow;
 	}
 }
 
@@ -59,8 +73,14 @@ PatchResult DownloadToolsTask::doInBackground(void* arg)
 	try {
 		postProgress(0.f);
 
+		lastProgressUpdate = std::chrono::duration_cast<std::chrono::milliseconds>(
+			std::chrono::system_clock::now().time_since_epoch()
+			);
+		lastDlNow = 0.0;
+
 		fs::path toolsdirectory = fs::path(mainWindow.toolsPathEditBox->getText());
-		downloadTools(toolsdirectory, std::bind(&DownloadToolsTask::downloadProgress, this, std::placeholders::_1));
+		downloadTools(toolsdirectory, std::bind(&DownloadToolsTask::downloadProgress, this, std::placeholders::_1,
+			std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 
 		postProgress(1.f);
 

@@ -34,14 +34,14 @@ class Network
 public:
 	Network();
 	~Network();
-	void setProgressCallback(std::function<void(float)> progressCallback);
+	void setProgressCallback(std::function<void(double, double, double, double)> progressCallback);
 	void curlDownload(const std::string& url, const std::string& fileName);
 	std::string curlGet(const std::string& url);
 private:
 	static constexpr double mBytesProgressUpdateDelta = 0.1; // 0.1 MB
 	static constexpr long long updatePeriodMs = 200; // update every 100ms
 
-	std::function<void(float)> progressCallback = nullptr;
+	std::function<void(double, double, double, double)> progressCallback = nullptr;
 
 	NetworkProgress networkProgress = {};
 	static size_t write_data_file(char* ptr, size_t size, size_t nmemb, void* stream);

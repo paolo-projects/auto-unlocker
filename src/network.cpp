@@ -12,7 +12,7 @@ Network::~Network() {
 	curl_global_cleanup();
 }
 
-void Network::setProgressCallback(std::function<void(float)> progressCallback)
+void Network::setProgressCallback(std::function<void(double, double, double, double)> progressCallback)
 {
 	this->progressCallback = progressCallback;
 }
@@ -63,7 +63,7 @@ int Network::progress_callback(void* clientp, double dltotal, double dlnow, doub
 int Network::progress_callback_external(void* clientp, double dltotal, double dlnow, double ultotal, double ulnow)
 {
 	Network* instance = reinterpret_cast<Network*>(clientp);
-	instance->progressCallback(dlnow / dltotal);
+	instance->progressCallback(dltotal, dlnow, ultotal, ulnow);
 	return 0;
 }
 

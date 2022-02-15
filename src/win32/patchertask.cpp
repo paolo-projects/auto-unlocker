@@ -23,10 +23,24 @@ void PatcherTask::onProgressUpdate(float progress)
 	}
 }
 
-void PatcherTask::downloadProgress(float progress)
+void PatcherTask::downloadProgress(double dltotal, double dlnow, double ultotal, double ulnow)
 {
-	if (progress > 0.f && progress < 1.f) {
-		postProgress(0.2 + progress * 0.6);
+	static char statusBarProgress[1024];
+
+	using namespace std::chrono;
+	milliseconds tTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+	long long tDelta = (tTime - lastProgressUpdate).count();
+
+	if (dltotal > 0 && tDelta > PROG_PERIOD_MS) {
+		double dlDelta = dlnow - lastDlNow;
+		float downloadPercent = dlnow / dltotal;
+
+		postProgress(0.2f + downloadPercent * 0.6f);
+
+		sprintf(statusBarProgress, "Downloading: %.0f %%, %.3f MB/s", downloadPercent*100, (dlDelta*1000)/(tDelta*1024*1024));
+		mainWindow.statusBar->setText(statusBarProgress);
+		lastProgressUpdate = tTime;
+		lastDlNow = dlnow;
 	}
 }
 
@@ -93,10 +107,16 @@ PatchResult PatcherTask::doInBackground(void* arg)
 		// Default output path is ./tools/
 		fs::path toolsdirectory = fs::path(".") / TOOLS_DOWNLOAD_FOLDER;
 
+		lastProgressUpdate = std::chrono::duration_cast<std::chrono::milliseconds>(
+			std::chrono::system_clock::now().time_since_epoch()
+			);
+		lastDlNow = 0.0;
+
 		if (mainWindow.downloadToolsChk->isChecked())
 		{
 			Logger::info("Downloading tools into \"" + toolsdirectory.string() + "\" directory...");
-			downloadTools(toolsdirectory, std::bind(&PatcherTask::downloadProgress, this, std::placeholders::_1));
+			downloadTools(toolsdirectory, std::bind(&PatcherTask::downloadProgress, this, std::placeholders::_1, 
+				std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 		}
 		else {
 			toolsdirectory = fs::path(mainWindow.toolsPathEditBox->getText());
