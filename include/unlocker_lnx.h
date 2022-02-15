@@ -1,5 +1,5 @@
-#ifndef UNLOCKER_H
-#define UNLOCKER_H
+#ifndef UNLOCKERLNX_H
+#define UNLOCKERLNX_H
 
 #include <string>
 #include "filesystem.hpp"
@@ -17,12 +17,10 @@
 #include "winservices.h"
 #include "patcher.h"
 
-#ifdef __linux__
 #include <unistd.h>
 #include <strings.h>
 
 #define stricmp(a, b) strcasecmp(a, b)
-#endif
 
 #include <stdio.h>
 
@@ -31,20 +29,13 @@
 
 // Forward declarations
 
-void preparePatch(fs::path backupPath);
 bool downloadTools(fs::path path, std::function<void(float)> progressCallback = nullptr);
 void copyTools(fs::path toolspath);
-void stopServices();
-void restartServices();
 
-void install();
+// Linux-only functions
+void installLnx();
+void preparePatchLnx(fs::path backupPath);
+void applyPatchLnx();
+void uninstallLnx();
 
-#ifdef _WIN32
-void doPatch(const fs::path& vmwareInstallPath, const fs::path& vmwareInstallPath64);
-void uninstall(const fs::path& vmwareInstallPath, const fs::path& vmwareInstallPath64);
-#else
-void doPatch();
-void uninstall();
-#endif
-
-#endif // UNLOKER_H
+#endif // UNLOKERLNX_H

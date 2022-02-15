@@ -18,11 +18,26 @@
 #include "controls/groupbox.h"
 #include "controls/checkbox.h"
 #include "controls/statusbar.h"
-#include "patcherthread.h"
+#include "patchertask.h"
+#include "unpatchertask.h"
 #include "resources.h"
 
 #include "installinfo.h"
-#include "unlocker.h"
+#include "unlocker_win.h"
+
+struct DialogState
+{
+	bool pathEnabled,
+		path64Enabled,
+		pathBrowseEnabled,
+		path64BrowseEnabled,
+		downloadToolsEnabled,
+		downloadToolsChecked,
+		toolsPathEnabled,
+		toolsBrowseEnabled,
+		patchEnabled,
+		unpatchEnabled;
+};
 
 class MainWindow : public Window
 {
@@ -56,10 +71,15 @@ private:
 	void revertPatchBtnClick();
 
 	void disableAllInput();
+	void restoreInput();
 	void patchComplete(PatchResult result);
+	void unpatchComplete(PatchResult result);
 	void patchProgress(float progress);
 
-	PatcherThread* patcherThread = nullptr;
+	PatcherTask* patcherTask = nullptr;
+	UnpatcherTask* unpatcherTask = nullptr;
+
+	DialogState dlgState;
 };
 
 #endif // MAINWINDOW_H

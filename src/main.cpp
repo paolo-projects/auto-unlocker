@@ -1,3 +1,26 @@
+/************************************************************************************************
+	Unlocker - Patcher + Tools Downloader
+	Created by Paolo Infante - Based on "Unlocker" by DrDonk
+
+	This project is born to provide a native solution, mainly on Windows, to the original
+	Unlocker project. Since the original project requires python, and it's not installed
+	by default on windows, this tool has been coded to provide an all-in-one solution with
+	no additional dependencies needed.
+
+	It relies on libcurl for the networking (get requests and file download) and libzip
+	for the zip extraction. The tar extraction, being relatively easy to implement, has been coded from
+	scratch. The libraries are linked statically to provide one final executable for the sake
+	of simplicity.
+
+	The future of this project is to provide a GUI for the windows target using the Win32 API.
+	Although this solution brings more complexity than using one of the many GUI libraries out there
+	such as MFC, QT, GTK, wx, the resulting executable will be smaller and with better compatibility.
+
+	For the linux target, it will still be shell-based, given the better-instructed user base running
+	this tool on linux os-es.
+
+*************************************************************************************************/
+
 #ifdef _WIN32
 #include <Windows.h>
 #include "win32/mainwindow.h"
@@ -8,9 +31,9 @@ bool registerControlStyles(DWORD style);
 
 #include <iostream>
 #include "config.h"
-#include "unlocker.h"
 
 #ifdef __linux__
+#include "unlocker_lnx.h"
 #include "logging/terminallogstrategy.h"
 
 void showhelp()
@@ -53,11 +76,11 @@ int main(int argc, const char* argv[])
 			const char* arg = argv[1];
 
 			if (stricmp(arg, UNINSTALL_OPTION) == 0)
-				uninstall();
+				uninstallLnx();
 			else if (stricmp(arg, HELP_OPTION) == 0)
 				showhelp();
 			else if (stricmp(arg, INSTALL_OPTION) == 0)
-				install();
+				installLnx();
 			else if (stricmp(arg, DOWNLOADONLY_OPTION) == 0)
 				downloadTools(fs::path(".") / TOOLS_DOWNLOAD_FOLDER);
 			else
@@ -77,21 +100,17 @@ int main(int argc, const char* argv[])
 				std::cin >> c;
 
 				if (c == "n" || c == "N")
-					install();
+					installLnx();
 				else
-					uninstall();
+					uninstallLnx();
 			}
-			else install();
+			else installLnx();
 		}
 	}
 	catch (const std::exception& exc)
 	{
 		Logger::error(std::string(exc.what()));
 	}
-
-#ifdef _WIN32
-	system("pause");
-#endif
 
 	Logger::free();
 	return 0;

@@ -13,25 +13,15 @@
 #include "debug.h"
 #include "config.h"
 
-class PatchException : std::exception
+class PatchException : public std::runtime_error
 {
 public:
-	PatchException(const char* message, ...)
-	{
-		va_list args;
-		va_start(args, message);
-		char* buf = new char[1024];
-		vsprintf(buf, message, args);
-		va_end(args);
-		msg = buf;
-	}
-	~PatchException()
-	{
-		delete[] msg;
-	}
-	const char* what() const noexcept { return msg; }
-private:
-	const char* msg;
+	PatchException(const char* message)
+		: std::runtime_error(message)
+	{}
+	PatchException(const std::string& message)
+		: std::runtime_error(message)
+	{}
 };
 
 struct LLQQQQLLQQ // couldn't find a better name LOL

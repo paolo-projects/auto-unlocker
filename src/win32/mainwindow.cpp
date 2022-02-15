@@ -27,9 +27,9 @@ void MainWindow::onCreate(HWND hWnd)
 	toolsPathEditBox = std::make_unique<EditBox>(hWnd, IDC_TOOLSPATH_EDITBOX, toolsDefLoc.c_str(), 20, 225, 300, 30);
 	toolsBrowseBtn = std::make_unique<Button>(hWnd, IDC_TOOLSPATH_BROWSE_BTN, "Browse", 330, 225, 80, 30);
 	patchBtn = std::make_unique<Button>(hWnd, IDC_PATCH_BTN, "Patch", 10, 285, 100, 30);
-	revertPatchBtn = std::make_unique<Button>(hWnd, IDC_REVERT_PATCH_BTN, "Revert patch", 115, 285, 100, 30);
+	revertPatchBtn = std::make_unique<Button>(hWnd, IDC_REVERT_PATCH_BTN, "Uninstall patch", 115, 285, 100, 30);
 	progressBar = std::make_unique<Progress>(hWnd, IDC_PROGRESSBAR, 10, 325, 410, 25);
-	statusBar = std::make_unique<StatusBar>(hWnd, IDC_STATUSBAR, "Hello");
+	statusBar = std::make_unique<StatusBar>(hWnd, IDC_STATUSBAR, "Auto-Unloacker " PROG_VERSION);
 
 	// Initial controls setup
 	pathEditBox->setReadOnly(true);
@@ -119,49 +119,109 @@ void MainWindow::patchBtnClick()
 {
 	disableAllInput();
 
-	patcherThread = new PatcherThread(*this);
+	patcherTask = new PatcherTask(*this);
 
-	patcherThread->setOnProgressCallback(std::bind(&MainWindow::patchProgress, this, std::placeholders::_1));
-	patcherThread->setOnCompleteCallback(std::bind(&MainWindow::patchComplete, this, std::placeholders::_1));
-				 
-	patcherThread->execute();
+	patcherTask->setOnProgressCallback(std::bind(&MainWindow::patchProgress, this, std::placeholders::_1));
+	patcherTask->setOnCompleteCallback(std::bind(&MainWindow::patchComplete, this, std::placeholders::_1));
+
+	patcherTask->run(nullptr);
 }
 
 void MainWindow::revertPatchBtnClick()
 {
 	disableAllInput();
+
+	unpatcherTask = new UnpatcherTask(*this);
+
+	unpatcherTask->setOnProgressCallback(std::bind(&MainWindow::patchProgress, this, std::placeholders::_1));
+	unpatcherTask->setOnCompleteCallback(std::bind(&MainWindow::unpatchComplete, this, std::placeholders::_1));
+
+	unpatcherTask->run(nullptr);
 }
 
 void MainWindow::disableAllInput()
 {
+	dlgState.pathBrowseEnabled = browseButton->isEnabled();
 	browseButton->setEnabled(false);
+	dlgState.pathEnabled = pathEditBox->isEnabled();
 	pathEditBox->setEnabled(false);
+	dlgState.path64BrowseEnabled = browseButtonX64->isEnabled();
 	browseButtonX64->setEnabled(false);
+	dlgState.path64Enabled = pathEditBoxX64->isEnabled();
 	pathEditBoxX64->setEnabled(false);
+	dlgState.downloadToolsChecked = downloadToolsChk->isChecked();
+	dlgState.downloadToolsEnabled = downloadToolsChk->isEnabled();
 	downloadToolsChk->setEnabled(false);
+	dlgState.toolsPathEnabled = toolsPathEditBox->isEnabled();
 	toolsPathEditBox->setEnabled(false);
+	dlgState.toolsBrowseEnabled = toolsBrowseBtn->isEnabled();
 	toolsBrowseBtn->setEnabled(false);
+	dlgState.patchEnabled = patchBtn->isEnabled();
 	patchBtn->setEnabled(false);
+	dlgState.unpatchEnabled = revertPatchBtn->isEnabled();
 	revertPatchBtn->setEnabled(false);
+}
+
+void MainWindow::restoreInput()
+{
+	browseButton->setEnabled(dlgState.pathBrowseEnabled);
+	pathEditBox->setEnabled(dlgState.pathEnabled);
+	browseButtonX64->setEnabled(dlgState.path64BrowseEnabled);
+	pathEditBoxX64->setEnabled(dlgState.path64Enabled);
+	downloadToolsChk->set(dlgState.downloadToolsChecked);
+	downloadToolsChk->setEnabled(dlgState.downloadToolsEnabled);
+	toolsPathEditBox->setEnabled(dlgState.toolsPathEnabled);
+	toolsBrowseBtn->setEnabled(dlgState.toolsBrowseEnabled);
+	patchBtn->setEnabled(dlgState.patchEnabled);
+	revertPatchBtn->setEnabled(dlgState.unpatchEnabled);
+
+	progressBar->setProgress(0);
 }
 
 void MainWindow::patchComplete(PatchResult result)
 {
 	if (result.result) {
-		MessageBox(hWnd, "The patch has been installed successfully. Refer to the log file that has been created in the program directory for the details.", 
+		char msg[4096];
+		sprintf(msg, "The patch has been installed successfully. Refer to the log file for detailed info:\n%s", result.logFilePath.c_str());
+		MessageBox(hWnd, msg,
 			"Success", MB_OK | MB_ICONINFORMATION);
 	}
 	else {
 		char msg[4096];
-		sprintf(msg, "An error occurred while applying the patch:\n%s\nCheck the log file created in the program directory for detailed info", result.errorMessage.c_str());
+		sprintf(msg, "An error occurred while applying the patch:\n%s\nCheck the log file for detailed info:\n%s", result.errorMessage.c_str(), result.logFilePath.c_str());
 		MessageBox(hWnd, msg, "Error", MB_OK | MB_ICONERROR);
 	}
 
-	if (patcherThread != nullptr)
+	if (patcherTask != nullptr)
 	{
-		delete patcherThread;
-		patcherThread = nullptr;
+		delete patcherTask;
+		patcherTask = nullptr;
 	}
+
+	restoreInput();
+}
+
+void MainWindow::unpatchComplete(PatchResult result)
+{
+	if (result.result) {
+		char msg[4096];
+		sprintf(msg, "The patch has been uninstalled successfully. Refer to the log file for detailed info:\n%s", result.logFilePath.c_str());
+		MessageBox(hWnd, msg,
+			"Success", MB_OK | MB_ICONINFORMATION);
+	}
+	else {
+		char msg[4096];
+		sprintf(msg, "An error occurred while uninstalling the patch:\n%s\nCheck the log file for detailed info:\n%s", result.errorMessage.c_str(), result.logFilePath.c_str());
+		MessageBox(hWnd, msg, "Error", MB_OK | MB_ICONERROR);
+	}
+
+	if (unpatcherTask != nullptr)
+	{
+		delete unpatcherTask;
+		unpatcherTask = nullptr;
+	}
+
+	restoreInput();
 }
 
 void MainWindow::patchProgress(float progress)

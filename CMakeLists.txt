@@ -39,7 +39,7 @@ endif()
 include_directories ("${PROJECT_SOURCE_DIR}/include")
 
 # main source files
-set (SOURCE_FILES src/unlocker.cpp /
+set (SOURCE_FILES /
 				src/versionparser.cpp /
 				src/buildsparser.cpp /
 				src/archive.cpp /
@@ -60,6 +60,7 @@ set (SOURCE_FILES src/unlocker.cpp /
 
 if(WIN32)
 	set (SOURCE_FILES ${SOURCE_FILES} /
+					src/unlocker_win.cpp /
 					src/win32/mainwindow.cpp /
 					src/win32/controls/button.cpp /
 					src/win32/controls/editbox.cpp /
@@ -70,8 +71,13 @@ if(WIN32)
 					src/win32/controls/groupbox.cpp /
 					src/win32/controls/checkbox.cpp /
 					src/win32/controls/statusbar.cpp /
-					src/win32/patcherthread.cpp /
+					src/win32/patchertask.cpp /
+					src/win32/unpatchertask.cpp /
 					src/logging/statusbarlogstrategy.cpp /
+	)
+else()
+	set (SOURCE_FILES ${SOURCE_FILES} /
+					src/unlocker_lnx.cpp /
 	)
 endif()
 
@@ -118,7 +124,7 @@ IF (MSVC)
 ENDIF(MSVC)
 
 # Main test
-
+#[[
 set (TEST_SOURCES tests/test_patch.cpp /
 				src/debug.cpp /
 				src/patcher.cpp /
@@ -133,7 +139,7 @@ set (TEST_SOURCES tests/test_patch.cpp /
 				src/ziparchive.cpp /
 				src/toolsdownloader.cpp)
 
-add_executable( TestPatch ${TEST_SOURCES}  "include/unlocker.h")
+add_executable( TestPatch ${TEST_SOURCES})
 
 target_compile_definitions(TestPatch PUBLIC _FILE_OFFSET_BITS=64)
 
@@ -167,7 +173,7 @@ set (TESTTAR_SOURCES tests/test_tar.cpp /
 				src/tar.cpp /
 				src/ziparchive.cpp)
 
-add_executable( TestTar ${TESTTAR_SOURCES}  "include/unlocker.h")
+add_executable( TestTar ${TESTTAR_SOURCES}  "include/unlocker_lnx.h")
 
 target_compile_definitions(TestTar PUBLIC _FILE_OFFSET_BITS=64)
 
@@ -202,7 +208,7 @@ set (TESTZIP_SOURCES tests/test_zip.cpp /
 				src/ziparchive.cpp /
 				src/toolsdownloader.cpp)
 
-add_executable( TestZip ${TESTZIP_SOURCES}  "include/unlocker.h")
+add_executable( TestZip ${TESTZIP_SOURCES}  "include/unlocker_lnx.h")
 
 target_compile_definitions(TestZip PUBLIC _FILE_OFFSET_BITS=64)
 
@@ -221,3 +227,4 @@ set_target_properties( TestZip PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED 
 
 enable_testing()
 add_test(NAME TestZipTest COMMAND TestZip "${PROJECT_SOURCE_DIR}")
+]]#

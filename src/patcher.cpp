@@ -175,7 +175,11 @@ void Patcher::patchSMC(fs::path name, bool isSharedObj)
 {
 	std::fstream i_file(name, std::ios_base::binary | std::ios_base::out | std::ios_base::in);
 	if (!i_file.good())
-		throw PatchException("Couldn't open file %s", name.string().c_str());
+	{
+		char msg[2048];
+		sprintf(msg, "Couldn't open file %s", name.string().c_str());
+		throw PatchException(msg);
+	}
 
 	long smc_old_memptr = 0;
 	long smc_new_memptr = 0;
@@ -415,7 +419,11 @@ void Patcher::patchBase(fs::path name)
 	Logger::debug("GOS Patching: " + name.filename().string());
 	std::fstream file(name, std::ios_base::binary | std::ios_base::in | std::ios_base::out);
 	if (!file.good())
-		throw PatchException("Couldn't open file %s", name.string().c_str());
+	{
+		char msg[2048];
+		sprintf(msg, "Couldn't open file %s", name.string().c_str());
+		throw PatchException(msg);
+	}
 
 	// Entry to search for in GOS table
 	// Should work for Workstation 12 - 15...

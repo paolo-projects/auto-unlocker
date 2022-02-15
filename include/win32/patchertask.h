@@ -4,31 +4,28 @@
 #include <Windows.h>
 #include <string>
 #include <functional>
+#include "win32/task.h"
+#include "win32/patchresult.h"
 #include "logging/streamlogstrategy.h"
 #include "logging/statusbarlogstrategy.h"
 #include "logging/combinedlogstrategy.h"
+#include "unlocker_win.h"
 
 class MainWindow;
 
-struct PatchResult
-{
-	bool result;
-	std::string errorMessage;
-};
-
-class PatcherThread
+class PatcherTask : public Task<void, float, PatchResult>
 {
 public:
-	PatcherThread(MainWindow& mainWindow);
-	void execute();
+	PatcherTask(MainWindow& mainWindow);
 	void setOnCompleteCallback(std::function<void(PatchResult)> completeCallback);
 	void setOnProgressCallback(std::function<void(float)> progressCallback);
+protected:
+	void onProgressUpdate(float progress) override;
+	PatchResult doInBackground(void* arg) override;
+	void onPostExecute(PatchResult result) override;
 private:
 	MainWindow& mainWindow;
 
-	void publishProgress(float progress);
-
-	static DWORD threadFunction(void* lpThreadParameter);
 	std::function<void(PatchResult)> onCompleteCallback = nullptr;
 	std::function<void(float)> onProgressCallback = nullptr;
 

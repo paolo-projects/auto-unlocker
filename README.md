@@ -3,6 +3,23 @@ A one-click Unlocker for VMWare Player and Workstation.
 
 **A C++ port of the [DrDonk Python Unlocker](https://github.com/DrDonk/unlocker)**
 
+## The tool
+
+This project is born to provide a native solution, mainly on Windows, to the original Unlocker project. 
+Since the original project requires python, and it's not installed by default on windows, this tool has 
+been coded to provide an all-in-one solution with no additional dependencies needed.
+
+It relies on libcurl for the networking (get requests and file download) and libzip	for the zip extraction.
+The tar extraction, being relatively easy to implement, has been coded from	scratch. 
+The libraries are linked statically to provide one final executable for the sake of simplicity.
+
+The Windows target features a GUI implemented throught the Win32 API.
+Although this solution brings more complexity than using one of the many GUI libraries out there,
+the resulting executable will be smaller and with better compatibility.
+
+For the linux target, it is still shell-based, given the better-instructed user base running
+this tool on linux os-es.
+
 ## DrDonk Unlocker
 
 Unlocker 3 is designed for VMware Workstation 11-15 and Player 7-15.
@@ -21,9 +38,8 @@ In all cases make sure VMware is not running, and any background guests have
 been shutdown.
 
 ## How to use
-I created the C++ version of this tool to avoid issues between different Python versions and OSes.
 
-**Windows:** just download from the *releases* section, extract to a folder (store it if you want to be able to uninstall later) and run the executable. The program should take care of everything by itself.
+**Windows:** just download from the *releases* section, extract to a folder (store it if you want to be able to uninstall later) and run the executable.
 
 **Linux:** you can find an experimental x64 .deb package in the latest release. It should work on Debian-derived distributions (including Ubuntu, etc.) although I've not tested it extensively. Install it with apt which will take care of all the dependencies. If it doesn't work for you or if you don't have a Debian-derived distribution you need to compile the program first. After you compiled it, ```chmod +x``` if needed and run ```sudo auto-unlocker```.
 
@@ -51,5 +67,3 @@ Run *CMake* on the source folder to generate a Visual Studio Project. The CMakeL
 
 **Linux:**
 Use the embedded Makefile. Get needed libraries (or compile them and install) first, then run ```make```
-
-*Note regarding default g++ version on Ubuntu:* by default, Ubuntu ships with g++ v7, which doesn't support natively c++17 filesystem library, although it includes it in the experimental namespace which should work fine. There's a wrapper that should automatically detect if filesystem is natively supported or not and choose the right namespace. If this doesn't work or you have issues try compiling it with g++8 or g++9.

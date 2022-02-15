@@ -29,7 +29,7 @@ LRESULT Window::WindowProc(HWND hWnd, UINT uMSG, WPARAM wParam, LPARAM lParam)
 		window->onCreate(hWnd);
 		break;
 
-	case WM_PAINT:
+	/*case WM_PAINT:
 	{
 		PAINTSTRUCT ps;
 		HDC hdc = BeginPaint(hWnd, &ps);
@@ -37,7 +37,7 @@ LRESULT Window::WindowProc(HWND hWnd, UINT uMSG, WPARAM wParam, LPARAM lParam)
 		FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_BTNFACE + 1));
 		EndPaint(hWnd, &ps);
 		break;
-	}
+	}*/
 	case WM_COMMAND:
 		switch (HIWORD(wParam)) {
 		case BN_CLICKED:

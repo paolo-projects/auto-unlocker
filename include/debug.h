@@ -5,11 +5,11 @@
 #include <iostream>
 #include <stdarg.h>
 #include "colors.h"
-#include "win32/controls/statusbar.h"
 #include "logging/logstrategy.h"
 
 #ifdef _WIN32
 #include <Windows.h>
+#include "win32/controls/statusbar.h"
 #endif
 
 #define LOGLEVEL_VERBOSE 3
