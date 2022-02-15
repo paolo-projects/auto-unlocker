@@ -73,6 +73,7 @@ if(WIN32)
 					src/win32/controls/statusbar.cpp /
 					src/win32/patchertask.cpp /
 					src/win32/unpatchertask.cpp /
+					src/win32/downloadtoolstask.cpp /
 					src/logging/statusbarlogstrategy.cpp /
 	)
 else()
@@ -106,7 +107,7 @@ target_link_libraries (Unlocker ${CURL_LIBRARIES})
 target_link_libraries (Unlocker ${LIBZIP_LIBRARY})
 
 if(WIN32)
-	target_link_libraries (Unlocker ws2_32 Wldap32 ComCtl32.lib Uxtheme.lib User32.lib Shlwapi.lib)
+	target_link_libraries (Unlocker ws2_32 Wldap32 ComCtl32.lib Shlwapi.lib)
 endif()
 
 # Amend manifest to tell Windows that the app needs admin privileges
@@ -124,6 +125,7 @@ IF (MSVC)
 ENDIF(MSVC)
 
 # Main test
+# Tests need to be fixed to use the GUI-based functions
 #[[
 set (TEST_SOURCES tests/test_patch.cpp /
 				src/debug.cpp /
@@ -158,6 +160,8 @@ set_target_properties( TestPatch PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRE
 
 enable_testing()
 add_test(NAME TestPatchTest COMMAND TestPatch "${PROJECT_SOURCE_DIR}")
+#]]
+
 
 # Tar test
 
@@ -227,4 +231,3 @@ set_target_properties( TestZip PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED 
 
 enable_testing()
 add_test(NAME TestZipTest COMMAND TestZip "${PROJECT_SOURCE_DIR}")
-]]#

@@ -29,14 +29,14 @@ PatchResult UnpatcherTask::doInBackground(void* arg)
 	fs::path vmwareInstallDir = fs::path(mainWindow.pathEditBox->getText()),
 		vmwareInstallDir64 = fs::path(mainWindow.pathEditBoxX64->getText());
 
-	// Create a log file in the current directory named unlocker-{date}.log
+	// Create a log file in the current directory named unlocker-uninstall-{date}.log
 	char logFilePath[MAX_PATH];
 	GetCurrentDirectory(MAX_PATH, logFilePath);
 
 	auto t = std::time(nullptr);
 	auto tm = *std::localtime(&t);
 	std::ostringstream oss;
-	oss << "unlocker-" << std::put_time(&tm, "%d-%m-%Y.%H-%M-%S") << ".log";
+	oss << "unlocker-uninstall-" << std::put_time(&tm, "%d-%m-%Y.%H-%M-%S") << ".log";
 	auto str = oss.str();
 
 	PathAppend(logFilePath, str.c_str());

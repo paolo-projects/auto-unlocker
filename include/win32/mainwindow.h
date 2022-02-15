@@ -20,6 +20,7 @@
 #include "controls/statusbar.h"
 #include "patchertask.h"
 #include "unpatchertask.h"
+#include "downloadtoolstask.h"
 #include "resources.h"
 
 #include "installinfo.h"
@@ -35,6 +36,7 @@ struct DialogState
 		downloadToolsChecked,
 		toolsPathEnabled,
 		toolsBrowseEnabled,
+		downloadToolsBtnEnabled,
 		patchEnabled,
 		unpatchEnabled;
 };
@@ -61,6 +63,7 @@ public:
 	std::unique_ptr<Button> patchBtn = nullptr;
 	std::unique_ptr<Button> revertPatchBtn = nullptr;
 	std::unique_ptr<StatusBar> statusBar = nullptr;
+	std::unique_ptr<Button> downloadToolsBtn = nullptr;
 
 private:
 	void browseButtonClick();
@@ -69,15 +72,18 @@ private:
 	void downloadToolsChkClick();
 	void patchBtnClick();
 	void revertPatchBtnClick();
+	void downloadToolsBtnClick();
 
 	void disableAllInput();
 	void restoreInput();
 	void patchComplete(PatchResult result);
 	void unpatchComplete(PatchResult result);
+	void toolsDownloadComplete(PatchResult result);
 	void patchProgress(float progress);
 
 	PatcherTask* patcherTask = nullptr;
 	UnpatcherTask* unpatcherTask = nullptr;
+	DownloadToolsTask* downloadToolsTask = nullptr;
 
 	DialogState dlgState;
 };

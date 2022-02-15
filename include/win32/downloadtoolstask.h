@@ -1,5 +1,5 @@
-#ifndef PATCHERTASK_H
-#define PATCHERTASK_H
+#ifndef DOWNLOADTOOLSTASK_H
+#define DOWNLOADTOOLSTASK_H
 
 #include <Windows.h>
 #include <string>
@@ -13,10 +13,10 @@
 
 class MainWindow;
 
-class PatcherTask : public Task<void, float, PatchResult>
+class DownloadToolsTask : public Task<void, float, PatchResult>
 {
 public:
-	PatcherTask(MainWindow& mainWindow);
+	DownloadToolsTask(MainWindow& mainWindow);
 	void setOnCompleteCallback(std::function<void(PatchResult)> completeCallback);
 	void setOnProgressCallback(std::function<void(float)> progressCallback);
 protected:
