@@ -26,7 +26,7 @@ void DownloadToolsTask::onProgressUpdate(float progress)
 void DownloadToolsTask::downloadProgress(float progress)
 {
 	if (progress > 0.f && progress < 1.f) {
-		postProgress(progress * 0.8);
+		postProgress(progress);
 	}
 }
 
@@ -68,6 +68,7 @@ PatchResult DownloadToolsTask::doInBackground(void* arg)
 	}
 	catch (const std::runtime_error& exc)
 	{
+		Logger::error(exc.what());
 		Logger::free();
 		return PatchResult{ false, std::string(exc.what()), std::string(logFilePath) };
 	}

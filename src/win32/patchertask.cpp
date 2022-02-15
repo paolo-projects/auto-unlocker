@@ -71,13 +71,22 @@ PatchResult PatcherTask::doInBackground(void* arg)
 		vmwareInstallDir64 = fs::path(mainWindow.pathEditBoxX64->getText());
 
 	try {
+		PatchVersioner patchVersion(vmwareInstallDir);
+
+		if (patchVersion.hasPatch())
+		{
+			throw std::runtime_error("The vmware installation you specified is already patched. Uninstall the previous patch first, or delete the .unlocker file (not suggested)");
+		}
+
 		Logger::info("Killing services and backing up files...");
-		preparePatchWin(backup);
+		preparePatchWin(backup, vmwareInstallDir);
 
 		postProgress(0.1f);
 
 		Logger::info("Patching files...");
 		applyPatchWin(vmwareInstallDir, vmwareInstallDir64);
+
+		patchVersion.writePatchData();
 
 		postProgress(0.2f);
 
@@ -108,6 +117,7 @@ PatchResult PatcherTask::doInBackground(void* arg)
 	}
 	catch (const std::runtime_error& exc)
 	{
+		Logger::error(exc.what());
 		Logger::free();
 		return PatchResult{ false, std::string(exc.what()), std::string(logFilePath) };
 	}

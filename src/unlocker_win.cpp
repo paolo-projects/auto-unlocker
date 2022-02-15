@@ -3,13 +3,6 @@
 void applyPatchWin(const fs::path& vmwareInstallPath, const fs::path& vmwareInstallPath64)
 {
 	// Setup paths
-	//VMWareInfoRetriever vmInfo;
-	PatchVersioner patchVersion(vmwareInstallPath);
-
-	if (patchVersion.hasPatch())
-	{
-		throw std::runtime_error("The vmware installation you specified is already patched. Uninstall the previous patch first, or delete the .unlocker file (not suggested)");
-	}
 
 	std::string binList[] = VM_WIN_PATCH_FILES;
 
@@ -47,8 +40,6 @@ void applyPatchWin(const fs::path& vmwareInstallPath, const fs::path& vmwareInst
 
 	Logger::info("File: " + vmwarebase.filename().string());
 	Patcher::patchBase(vmwarebase);
-
-	patchVersion.writePatchData();
 }
 
 void stopServices()
@@ -109,10 +100,8 @@ void restartServices()
 	}
 }
 
-void preparePatchWin(fs::path backupPath)
+void preparePatchWin(fs::path backupPath, fs::path vmInstallPath)
 {
-	// Retrieve installation path from registry
-	VMWareInfoRetriever vmInstall;
 
 	stopServices();
 
@@ -122,7 +111,7 @@ void preparePatchWin(fs::path backupPath)
 	for (auto element : filesToBackup)
 	{
 		auto filen = element.first;
-		fs::path fPath = (vmInstall.getInstallPath() + filen);
+		fs::path fPath = vmInstallPath / filen;
 		fs::path destpath = backupPath / element.second;
 		if (!fs::exists(destpath))
 		{

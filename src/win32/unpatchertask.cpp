@@ -52,7 +52,9 @@ PatchResult UnpatcherTask::doInBackground(void* arg)
 	Logger::init(&multipleLogStrategy);
 	try
 	{
-		postProgress(0.f); PatchVersioner patchVersion(vmwareInstallDir);
+		postProgress(0.f); 
+		
+		PatchVersioner patchVersion(vmwareInstallDir);
 
 		if (!patchVersion.hasPatch())
 		{
@@ -107,6 +109,8 @@ PatchResult UnpatcherTask::doInBackground(void* arg)
 			throw std::runtime_error("Couldn't find backup files...");
 		}
 
+		patchVersion.removePatchVersion();
+
 		postProgress(0.4f);
 
 		// Remove darwin*.* from InstallDir
@@ -132,14 +136,13 @@ PatchResult UnpatcherTask::doInBackground(void* arg)
 
 		postProgress(0.8f);
 
-		patchVersion.removePatchVersion();
-
 		Logger::info("Uninstall complete.");
 
 		postProgress(1.f);
 	}
 	catch (const std::runtime_error& exc)
 	{
+		Logger::error(exc.what());
 		Logger::free();
 		return PatchResult{
 			false,

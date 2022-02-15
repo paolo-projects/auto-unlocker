@@ -23,7 +23,7 @@
 bool downloadTools(fs::path path, std::function<void(float)> progressCallback = nullptr);
 void copyTools(fs::path toolspath, fs::path copyTo);
 
-void preparePatchWin(fs::path backupPath);
+void preparePatchWin(fs::path backupPath, fs::path vmInstallPath);
 void applyPatchWin(const fs::path& vmwareInstallPath, const fs::path& vmwareInstallPath64);
 void stopServices();
 void restartServices();

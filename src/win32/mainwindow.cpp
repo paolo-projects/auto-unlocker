@@ -2,7 +2,15 @@
 
 void MainWindow::onCreate(HWND hWnd)
 {
-	VMWareInfoRetriever vmwareInfo;
+	std::string installPath = "",
+		installPathX64 = "";
+
+	try {
+		VMWareInfoRetriever vmwareInfo;
+		installPath = vmwareInfo.getInstallPath();
+		installPathX64 = vmwareInfo.getInstallPath64();
+	} catch(const std::exception& exc)
+	{ }
 
 	char backupPath[MAX_PATH], toolsPath[MAX_PATH];
 	GetCurrentDirectory(MAX_PATH, backupPath);
@@ -16,10 +24,10 @@ void MainWindow::onCreate(HWND hWnd)
 
 	// Add controls to the window
 	browseLabel = std::make_unique<Label>(hWnd, NULL, "VMWare install location", 10, 10, 430, 15);
-	pathEditBox = std::make_unique<EditBox>(hWnd, IDC_PATH_EDITBOX, vmwareInfo.getInstallPath().c_str(), 10, 35, 300, 30);
+	pathEditBox = std::make_unique<EditBox>(hWnd, IDC_PATH_EDITBOX, installPath.c_str(), 10, 35, 300, 30);
 	browseButton = std::make_unique<Button>(hWnd, IDC_PATH_BROWSEBTN, "Browse", 320, 35, 100, 30);
 	browseLabelX64 = std::make_unique<Label>(hWnd, NULL, "VMWare X64 location", 10, 75, 430, 15);
-	pathEditBoxX64 = std::make_unique<EditBox>(hWnd, IDC_PATH_EDITBOXX64, vmwareInfo.getInstallPath64().c_str(), 10, 100, 300, 30);
+	pathEditBoxX64 = std::make_unique<EditBox>(hWnd, IDC_PATH_EDITBOXX64, installPathX64.c_str(), 10, 100, 300, 30);
 	browseButtonX64 = std::make_unique<Button>(hWnd, IDC_PATH_BROWSEBTNX64, "Browse", 320, 100, 100, 30);
 	toolsGroup = std::make_unique<GroupBox>(hWnd, "Tools", 10, 140, 410, 135);
 	downloadToolsChk = std::make_unique<CheckBox>(hWnd, IDC_DOWNLOADTOOLS_CHECKBOX, "Download tools", 20, 160, 400, 30);
