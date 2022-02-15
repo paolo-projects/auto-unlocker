@@ -46,7 +46,6 @@ set (SOURCE_FILES /
 				src/network.cpp /
 				src/debug.cpp /
 				src/installinfo.cpp /
-				src/winservices.cpp /
 				src/patcher.cpp /
 				src/tar.cpp /
 				src/main.cpp /
@@ -61,6 +60,7 @@ set (SOURCE_FILES /
 if(WIN32)
 	set (SOURCE_FILES ${SOURCE_FILES} /
 					src/unlocker_win.cpp /
+					src/winservices.cpp /
 					src/win32/mainwindow.cpp /
 					src/win32/controls/button.cpp /
 					src/win32/controls/editbox.cpp /
@@ -75,6 +75,7 @@ if(WIN32)
 					src/win32/unpatchertask.cpp /
 					src/win32/downloadtoolstask.cpp /
 					src/logging/statusbarlogstrategy.cpp /
+					src/patchversioner.cpp /
 	)
 else()
 	set (SOURCE_FILES ${SOURCE_FILES} /

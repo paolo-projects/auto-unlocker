@@ -16,21 +16,15 @@
 #include "installinfo.h"
 #include "winservices.h"
 #include "patcher.h"
+#include "patchversioner.h"
 
 #include <stdio.h>
-
-#define CHECKRES(x) try{ (x); } catch (const PatchException& exc) { Logger::error(exc.what()); }
-#define KILL(x) (x); exit(1);
-
-// Forward declarations
 
 bool downloadTools(fs::path path, std::function<void(float)> progressCallback = nullptr);
 void copyTools(fs::path toolspath, fs::path copyTo);
 
-// Windows-only GUI-compatible functions
 void preparePatchWin(fs::path backupPath);
 void applyPatchWin(const fs::path& vmwareInstallPath, const fs::path& vmwareInstallPath64);
-void uninstallWin(const fs::path& vmwareInstallPath, const fs::path& vmwareInstallPath64);
 void stopServices();
 void restartServices();
 

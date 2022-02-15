@@ -35,7 +35,6 @@ void installLnx()
 
 void uninstallLnx()
 {
-
 	// Default output path is ./tools/
 	fs::path toolsdirectory = fs::path(".") / TOOLS_DOWNLOAD_FOLDER;
 	// Default backup path is ./backup/

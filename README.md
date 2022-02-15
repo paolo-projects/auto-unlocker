@@ -39,18 +39,16 @@ been shutdown.
 
 ## How to use
 
-**Windows:** just download from the *releases* section, extract to a folder (store it if you want to be able to uninstall later) and run the executable.
+**Windows (GUI):** just download from the *releases* section, extract to a folder (store it if you want to be able to uninstall later) and run the executable.
 
-**Linux:** you can find an experimental x64 .deb package in the latest release. It should work on Debian-derived distributions (including Ubuntu, etc.) although I've not tested it extensively. Install it with apt which will take care of all the dependencies. If it doesn't work for you or if you don't have a Debian-derived distribution you need to compile the program first. After you compiled it, ```chmod +x``` if needed and run ```sudo auto-unlocker```.
+**Linux (shell):** You need to compile the program first. After you compiled it, ```chmod +x``` if needed and run ```sudo ./auto-unlocker```. Refer to the next section for more info about compiling the tool.
 
-**Command line options:**
+**Command line options (linux):**
 
 * ```--install``` *(Default behavior when called with no arguments)* Installs the patch.
 * ```--uninstall``` Uninstalls the patch. Works only if the patch was previously installed and the *backup* folder is intact
-* ```--download-tools``` Only downloads the tools in the `tools` folder
+* ```--download-tools``` Downloads the tools in the `tools` folder
 * ```--help``` Shows a list of the available options
-
-**I tested the program on Windows with VMware Player 15.0.** I plan to test it on Linux soon, though as of now I don't know if it works there, or with other VMware versions.
 
 ## Compile
 The program can be compiled on Windows with CMake, provided you get or compile the needed libraries first. Run CMake on the source dir and it will generate a ready to build project.
@@ -67,3 +65,14 @@ Run *CMake* on the source folder to generate a Visual Studio Project. The CMakeL
 
 **Linux:**
 Use the embedded Makefile. Get needed libraries (or compile them and install) first, then run ```make```
+
+On Ubuntu:
+
+```bash
+sudo apt-get install libcurl4-openssl-dev libzip-dev
+git clone https://github.com/paolo-projects/auto-unlocker
+cd auto-unlocker
+make
+chmod +x ./auto-unlocker
+sudo ./auto-unlocker
+```

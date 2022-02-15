@@ -8,7 +8,6 @@
 
 void ServiceStopper::StopService_s(std::string serviceName)
 {
-#ifdef _WIN32
 	SERVICE_STATUS_PROCESS ssp;
 	ULONGLONG dwStartTime = GetTickCount64();
 	DWORD dwBytesNeeded;
@@ -155,12 +154,10 @@ void ServiceStopper::StopService_s(std::string serviceName)
 
 	CloseServiceHandle(schService);
 	CloseServiceHandle(schSCManager);
-#endif
 }
 
 bool ServiceStopper::StopDependantServices(SC_HANDLE schService, SC_HANDLE schSCManager)
 {
-#ifdef _WIN32
 	DWORD i;
 	DWORD dwBytesNeeded;
 	DWORD dwCount;
@@ -268,14 +265,10 @@ bool ServiceStopper::StopDependantServices(SC_HANDLE schService, SC_HANDLE schSC
 		}
 	}
 	return success;
-#else
-	return false;
-#endif
 }
 
 bool ServiceStopper::StartService_s(std::string serviceName)
 {
-#ifdef _WIN32
 	SERVICE_STATUS_PROCESS ssStatus;
 	DWORD dwOldCheckPoint;
 	ULONGLONG dwStartTickCount;
@@ -467,14 +460,10 @@ bool ServiceStopper::StartService_s(std::string serviceName)
 
 	// Determine whether the service is running.
 	return (ssStatus.dwCurrentState == SERVICE_RUNNING);
-#else
-	return false;
-#endif
 }
 
 bool ServiceStopper::KillProcess(std::string procName)
 {
-#ifdef _WIN32
 	HANDLE hndl = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 	DWORD dwsma = GetLastError();
 	DWORD dwExitCode = 0;
@@ -503,6 +492,4 @@ bool ServiceStopper::KillProcess(std::string procName)
 	}
 	// There is no need to inform the user that the process cannot be killed if it is the VMware Player version or it not running.
 	//else throw ServiceStopException("Couldn't kill %s, process not found.", procName.c_str());
-#endif
-	return false;
 }

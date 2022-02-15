@@ -4,11 +4,7 @@
 #include <string>
 #include <stdarg.h>
 
-#ifdef _WIN32
 #include "Windows.h"
-#else
-typedef int SC_HANDLE; // dummy typename for non windows systems
-#endif
 
 class ServiceStopper
 {

@@ -1,79 +1,15 @@
 #include "unlocker_win.h"
 
-void uninstallWin(const fs::path& vmwareInstallDir, const fs::path& vmwareInstallDir64)
-{
-	// Stop services
-	stopServices();
-
-	// Default output path is ./tools/
-	fs::path toolsdirectory = fs::path(".") / TOOLS_DOWNLOAD_FOLDER;
-	// Default backup path is ./backup/
-	fs::path backup = fs::path(".") / BACKUP_FOLDER;
-
-	Logger::info("Restoring files...");
-	// Copy contents of backup/
-	if (fs::exists(backup))
-	{
-		for (const auto& file : fs::directory_iterator(backup))
-		{
-			if (fs::is_regular_file(file))
-			{
-				if (fs::copy_file(file.path(), vmwareInstallDir / file.path().filename(), fs::copy_options::overwrite_existing))
-				{
-					Logger::info("File \"" + file.path().string() + "\" restored successfully");
-				}
-				else
-				{
-					throw std::runtime_error("Couldn't restore file " + file.path().string());
-				}
-			}
-		}
-		// Copy contents of backup/x64/
-		for (const auto& file : fs::directory_iterator(backup / "x64"))
-		{
-			if (fs::is_regular_file(file))
-			{
-				if (fs::copy_file(file.path(), vmwareInstallDir64 / file.path().filename(), fs::copy_options::overwrite_existing))
-				{
-					Logger::info("File \"" + file.path().string() + "\" restored successfully");
-				}
-				else
-				{
-					throw std::runtime_error("Couldn't restore file " + file.path().string());
-				}
-			}
-		}
-	}
-	else {
-		throw std::runtime_error("Couldn't find backup files...");
-		return;
-	}
-	// Remove darwin*.* from InstallDir
-	for (const auto& file : fs::directory_iterator(vmwareInstallDir))
-	{
-		if (fs::is_regular_file(file))
-		{
-			size_t is_drw = file.path().filename().string().find("darwin");
-			if (is_drw != std::string::npos && is_drw == 0)
-			{
-				fs::remove(file);
-			}
-		}
-	}
-
-	fs::remove_all(backup);
-	fs::remove_all(toolsdirectory);
-
-	// Restart services
-	restartServices();
-
-	Logger::info("Uninstall complete.");
-}
-
 void applyPatchWin(const fs::path& vmwareInstallPath, const fs::path& vmwareInstallPath64)
 {
 	// Setup paths
 	//VMWareInfoRetriever vmInfo;
+	PatchVersioner patchVersion(vmwareInstallPath);
+
+	if (patchVersion.hasPatch())
+	{
+		throw std::runtime_error("The vmware installation you specified is already patched. Uninstall the previous patch first, or delete the .unlocker file (not suggested)");
+	}
 
 	std::string binList[] = VM_WIN_PATCH_FILES;
 
@@ -111,6 +47,8 @@ void applyPatchWin(const fs::path& vmwareInstallPath, const fs::path& vmwareInst
 
 	Logger::info("File: " + vmwarebase.filename().string());
 	Patcher::patchBase(vmwarebase);
+
+	patchVersion.writePatchData();
 }
 
 void stopServices()

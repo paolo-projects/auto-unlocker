@@ -8,7 +8,6 @@ src	= src/versionparser.cpp \
 	src/network.cpp \
 	src/debug.cpp \
 	src/installinfo.cpp \
-	src/winservices.cpp \
 	src/patcher.cpp \
 	src/tar.cpp \
 	src/main.cpp \

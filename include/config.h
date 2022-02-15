@@ -9,6 +9,9 @@
 // Program options
 #define PROG_VERSION "v2.0.0"
 
+// File used for checking if the patch has been applied
+#define PATCH_VER_FILE ".unlocker"
+
 // Log level
 // 0 - none
 // 1 - info (standard info, files being extracted, downloaded, etc.)

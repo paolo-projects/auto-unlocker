@@ -52,7 +52,91 @@ PatchResult UnpatcherTask::doInBackground(void* arg)
 	Logger::init(&multipleLogStrategy);
 	try
 	{
-		uninstallWin(vmwareInstallDir, vmwareInstallDir64);
+		postProgress(0.f); PatchVersioner patchVersion(vmwareInstallDir);
+
+		if (!patchVersion.hasPatch())
+		{
+			throw std::runtime_error("The vmware installation you specified does not have a patch installed");
+		}
+
+		// Stop services
+		stopServices();
+
+		postProgress(0.2f);
+
+		// Default output path is ./tools/
+		fs::path toolsdirectory = fs::path(".") / TOOLS_DOWNLOAD_FOLDER;
+		// Default backup path is ./backup/
+		fs::path backup = fs::path(".") / BACKUP_FOLDER;
+
+		Logger::info("Restoring files...");
+		// Copy contents of backup/
+		if (fs::exists(backup))
+		{
+			for (const auto& file : fs::directory_iterator(backup))
+			{
+				if (fs::is_regular_file(file))
+				{
+					if (fs::copy_file(file.path(), vmwareInstallDir / file.path().filename(), fs::copy_options::overwrite_existing))
+					{
+						Logger::info("File \"" + file.path().string() + "\" restored successfully");
+					}
+					else
+					{
+						throw std::runtime_error("Couldn't restore file " + file.path().string());
+					}
+				}
+			}
+			// Copy contents of backup/x64/
+			for (const auto& file : fs::directory_iterator(backup / "x64"))
+			{
+				if (fs::is_regular_file(file))
+				{
+					if (fs::copy_file(file.path(), vmwareInstallDir64 / file.path().filename(), fs::copy_options::overwrite_existing))
+					{
+						Logger::info("File \"" + file.path().string() + "\" restored successfully");
+					}
+					else
+					{
+						throw std::runtime_error("Couldn't restore file " + file.path().string());
+					}
+				}
+			}
+		}
+		else {
+			throw std::runtime_error("Couldn't find backup files...");
+		}
+
+		postProgress(0.4f);
+
+		// Remove darwin*.* from InstallDir
+		for (const auto& file : fs::directory_iterator(vmwareInstallDir))
+		{
+			if (fs::is_regular_file(file))
+			{
+				size_t is_drw = file.path().filename().string().find("darwin");
+				if (is_drw != std::string::npos && is_drw == 0)
+				{
+					fs::remove(file);
+				}
+			}
+		}
+
+		fs::remove_all(backup);
+		fs::remove_all(toolsdirectory);
+
+		postProgress(0.6f);
+
+		// Restart services
+		restartServices();
+
+		postProgress(0.8f);
+
+		patchVersion.removePatchVersion();
+
+		Logger::info("Uninstall complete.");
+
+		postProgress(1.f);
 	}
 	catch (const std::runtime_error& exc)
 	{

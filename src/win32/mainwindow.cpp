@@ -30,7 +30,7 @@ void MainWindow::onCreate(HWND hWnd)
 	patchBtn = std::make_unique<Button>(hWnd, IDC_PATCH_BTN, "Patch", 10, 285, 100, 30);
 	revertPatchBtn = std::make_unique<Button>(hWnd, IDC_REVERT_PATCH_BTN, "Uninstall patch", 115, 285, 100, 30);
 	progressBar = std::make_unique<Progress>(hWnd, IDC_PROGRESSBAR, 10, 325, 410, 25);
-	statusBar = std::make_unique<StatusBar>(hWnd, IDC_STATUSBAR, "Auto-Unloacker " PROG_VERSION);
+	statusBar = std::make_unique<StatusBar>(hWnd, IDC_STATUSBAR, "Auto-Unlocker " PROG_VERSION);
 
 	// Initial controls setup
 	pathEditBox->setReadOnly(true);

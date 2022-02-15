@@ -14,7 +14,6 @@
 #include "debug.h"
 #include "toolsdownloader.h"
 #include "installinfo.h"
-#include "winservices.h"
 #include "patcher.h"
 
 #include <unistd.h>
@@ -27,12 +26,9 @@
 #define CHECKRES(x) try{ (x); } catch (const PatchException& exc) { Logger::error(exc.what()); }
 #define KILL(x) (x); exit(1);
 
-// Forward declarations
-
 bool downloadTools(fs::path path, std::function<void(float)> progressCallback = nullptr);
 void copyTools(fs::path toolspath);
 
-// Linux-only functions
 void installLnx();
 void preparePatchLnx(fs::path backupPath);
 void applyPatchLnx();
