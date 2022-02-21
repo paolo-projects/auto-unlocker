@@ -19,6 +19,8 @@
 #include <unistd.h>
 #include <strings.h>
 
+#include "patchversioner.h"
+
 #define stricmp(a, b) strcasecmp(a, b)
 
 #include <stdio.h>
@@ -26,7 +28,7 @@
 #define CHECKRES(x) try{ (x); } catch (const PatchException& exc) { Logger::error(exc.what()); }
 #define KILL(x) (x); exit(1);
 
-bool downloadTools(fs::path path, std::function<void(float)> progressCallback = nullptr);
+bool downloadTools(fs::path path);
 void copyTools(fs::path toolspath);
 
 void installLnx();

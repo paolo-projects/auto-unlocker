@@ -55,6 +55,7 @@ set (SOURCE_FILES /
 				src/logging/terminallogstrategy.cpp /
 				src/logging/streamlogstrategy.cpp /
 				src/logging/logstrategy.cpp /
+				src/patchversioner.cpp /
 )
 
 if(WIN32)
@@ -75,7 +76,6 @@ if(WIN32)
 					src/win32/unpatchertask.cpp /
 					src/win32/downloadtoolstask.cpp /
 					src/logging/statusbarlogstrategy.cpp /
-					src/patchversioner.cpp /
 	)
 else()
 	set (SOURCE_FILES ${SOURCE_FILES} /

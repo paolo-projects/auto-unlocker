@@ -17,6 +17,7 @@ src	= src/versionparser.cpp \
 	src/logging/terminallogstrategy.cpp \
 	src/logging/streamlogstrategy.cpp \
 	src/logging/logstrategy.cpp \
+	src/patchversioner.cpp \
 	src/unlocker_lnx.cpp
 
 obj	= $(src:.cpp=.o)

@@ -107,7 +107,7 @@ void MainWindow::toolsBrowseButtonClick()
 {
 	char path[MAX_PATH];
 	BROWSEINFO bInfo = {};
-	bInfo.lpszTitle = "Select the VMWare x64 install directory";
+	bInfo.lpszTitle = "Select the tools folder (or where you want to download them)";
 	bInfo.hwndOwner = hWnd;
 	LPITEMIDLIST pIdl = SHBrowseForFolder(&bInfo);
 

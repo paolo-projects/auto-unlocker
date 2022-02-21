@@ -2,6 +2,14 @@
 
 void installLnx()
 {
+	PatchVersioner patchVersion(fs::path(LNX_PATCH_VER_PATH) / PATCH_VER_FILE);
+
+	if (patchVersion.hasPatch())
+	{
+		Logger::error("Patch is already installed. Uninstall it first before applying it again");
+		return;
+	}
+
 	// Default output path is ./tools/
 	fs::path toolsdirectory = fs::path(".") / TOOLS_DOWNLOAD_FOLDER;
 	// Default backup path is ./backup/
@@ -13,6 +21,8 @@ void installLnx()
 	Logger::info("Patching files...");
 
 	applyPatchLnx();
+
+	patchVersion.writePatchData();
 
 	Logger::info("Downloading tools into \"" + toolsdirectory.string() + "\" directory...");
 
@@ -35,6 +45,14 @@ void installLnx()
 
 void uninstallLnx()
 {
+	PatchVersioner patchVersion(fs::path(LNX_PATCH_VER_PATH) / PATCH_VER_FILE);
+
+	if (!patchVersion.hasPatch())
+	{
+		Logger::error("Patch is not installed");
+		return;
+	}
+
 	// Default output path is ./tools/
 	fs::path toolsdirectory = fs::path(".") / TOOLS_DOWNLOAD_FOLDER;
 	// Default backup path is ./backup/
@@ -100,6 +118,8 @@ void uninstallLnx()
 			}
 		}
 	}
+
+	patchVersion.removePatchVersion();
 
 	fs::remove_all(backup);
 	fs::remove_all(toolsdirectory);
@@ -257,14 +277,9 @@ void copyTools(fs::path toolspath)
 
 
 // Download tools into "path"
-bool downloadTools(fs::path path, std::function<void(float)> progressCallback)
+bool downloadTools(fs::path path)
 {
 	Network network;
-
-	if (progressCallback != nullptr)
-	{
-		network.setProgressCallback(progressCallback);
-	}
 
 	fs::path temppath = fs::temp_directory_path(); // extract files in the temp folder first
 
