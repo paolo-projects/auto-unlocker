@@ -11,7 +11,7 @@
 
 // File used for checking if the patch has been applied
 #define PATCH_VER_FILE ".unlocker"
-#define LNX_PATCH_VER_PATH "/etc/vmware"
+#define LNX_PATCH_VER_PATH "/usr/lib/vmware"
 
 // Log level
 // 0 - none

@@ -36,7 +36,7 @@ void PatchVersioner::writePatchData()
 
 	if (vFile == NULL)
 	{
-		throw PatchVersionerException("Can't open version file for writing");
+		throw PatchVersionerException("Can't open version file for writing at: " + versionFile);
 	}
 
 	time_t pTime = time(NULL);

@@ -24,6 +24,8 @@ void installLnx()
 
 	patchVersion.writePatchData();
 
+	Logger::verbose("Written version file at " + (fs::path(LNX_PATCH_VER_PATH) / PATCH_VER_FILE).string());
+
 	Logger::info("Downloading tools into \"" + toolsdirectory.string() + "\" directory...");
 
 	bool alreadyHasTools = fs::exists(fs::path(".") / TOOLS_DOWNLOAD_FOLDER / FUSION_ZIP_TOOLS_NAME) && fs::exists(fs::path(".") / TOOLS_DOWNLOAD_FOLDER / FUSION_ZIP_PRE15_TOOLS_NAME);
@@ -120,6 +122,7 @@ void uninstallLnx()
 	}
 
 	patchVersion.removePatchVersion();
+	Logger::verbose("Removed version file from " + (fs::path(LNX_PATCH_VER_PATH) / PATCH_VER_FILE).string());
 
 	fs::remove_all(backup);
 	fs::remove_all(toolsdirectory);
