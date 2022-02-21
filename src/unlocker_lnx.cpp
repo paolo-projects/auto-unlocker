@@ -2,7 +2,7 @@
 
 void installLnx()
 {
-	PatchVersioner patchVersion(fs::path(LNX_PATCH_VER_PATH) / PATCH_VER_FILE);
+	PatchVersioner patchVersion(LNX_PATCH_VER_PATH);
 
 	if (patchVersion.hasPatch())
 	{
@@ -47,7 +47,7 @@ void installLnx()
 
 void uninstallLnx()
 {
-	PatchVersioner patchVersion(fs::path(LNX_PATCH_VER_PATH) / PATCH_VER_FILE);
+	PatchVersioner patchVersion(LNX_PATCH_VER_PATH);
 
 	if (!patchVersion.hasPatch())
 	{
