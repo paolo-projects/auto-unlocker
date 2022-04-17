@@ -173,7 +173,6 @@ set (TESTTAR_SOURCES tests/test_tar.cpp /
 				src/buildsparser.cpp /
 				src/archive.cpp /
 				src/installinfo.cpp /
-				src/winservices.cpp /
 				src/network.cpp /
 				src/tar.cpp /
 				src/ziparchive.cpp)
@@ -207,7 +206,6 @@ set (TESTZIP_SOURCES tests/test_zip.cpp /
 				src/buildsparser.cpp /
 				src/archive.cpp /
 				src/installinfo.cpp /
-				src/winservices.cpp /
 				src/network.cpp /
 				src/tar.cpp /
 				src/ziparchive.cpp /
