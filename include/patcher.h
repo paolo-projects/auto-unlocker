@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <cstdarg>
 #include <array>
+#include <cstring>
 
 #include "debug.h"
 #include "config.h"
