@@ -1,4 +1,5 @@
 #include "patcher.h"
+#include <cstring>
 
 // Settings for memory and IO related stuff
 #define FREAD_BUF_SIZE 2048 // 2 kB
