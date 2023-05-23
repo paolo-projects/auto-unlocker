@@ -24,7 +24,6 @@ private:
 	Network& network;
 	std::string baseUrl, versionNumber, versionUrl, buildurl;
 
-	bool downloadStandalone(const fs::path& to);
 	bool downloadFromCore(const fs::path& to);
 };
 

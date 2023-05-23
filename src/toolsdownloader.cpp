@@ -15,67 +15,7 @@ ToolsDownloader::ToolsDownloader(Network& network, const std::string& baseUrl, c
 
 bool ToolsDownloader::download(const fs::path& to)
 {
-	bool success = downloadStandalone(to);
-	if (!success) {
-		success = downloadFromCore(to);
-	}
-	return success;
-}
-
-bool ToolsDownloader::downloadStandalone(const fs::path& to)
-{
-	fs::path temppath = fs::temp_directory_path();
-
-	std::string toolsurl = buildurl + FUSION_DEF_TOOLS_LOC;
-	std::string tools_pre15_url = buildurl + FUSION_DEF_PRE15_TOOLS_LOC;
-
-	std::string tools_diskpath = (temppath / FUSION_DEF_TOOLS_NAME).string();
-	std::string toolspre15_diskpath = (temppath / FUSION_DEF_PRE15_TOOLS_NAME).string();
-
-	Logger::debug("Downloading tools from " + toolsurl + " and " + tools_pre15_url);
-
-	try {
-		network.curlDownload(toolsurl, tools_diskpath);
-		network.curlDownload(tools_pre15_url, toolspre15_diskpath);
-
-		// if tools were successfully downloaded, extract them to destination folder
-		bool success = Archive::extractTar(temppath / FUSION_DEF_TOOLS_NAME, FUSION_DEF_TOOLS_ZIP, temppath / FUSION_DEF_TOOLS_ZIP);
-		success &= Archive::extractTar(temppath / FUSION_DEF_PRE15_TOOLS_NAME, FUSION_DEF_PRE15_TOOLS_ZIP, temppath / FUSION_DEF_PRE15_TOOLS_ZIP);
-
-		if (!success)
-		{
-			Logger::error("Couldn't extract zip files from tars");
-			return false;
-		}
-
-		success = Archive::extractZip(temppath / FUSION_DEF_TOOLS_ZIP, FUSION_TAR_TOOLS_ISO, to / FUSION_ZIP_TOOLS_NAME);
-		success &= Archive::extractZip(temppath / FUSION_DEF_PRE15_TOOLS_ZIP, FUSION_TAR_PRE15_TOOLS_ISO, to / FUSION_ZIP_PRE15_TOOLS_NAME);
-
-		// Cleanup zips
-		fs::remove(temppath / FUSION_DEF_TOOLS_ZIP);
-		fs::remove(temppath / FUSION_DEF_PRE15_TOOLS_ZIP);
-
-		if (!success)
-		{
-			Logger::error("Couldn't extract tools from zip files");
-			return false;
-		}
-
-		// Cleanup tars
-		fs::remove(temppath / FUSION_DEF_TOOLS_NAME);
-		fs::remove(temppath / FUSION_DEF_PRE15_TOOLS_NAME);
-	}
-	catch (const NetworkException& exc) {
-		if (exc.getCode() == CURLE_HTTP_RETURNED_ERROR) {
-			Logger::debug("Tools not found as standalone");
-			return false;
-		}
-		else {
-			throw std::runtime_error(std::string(exc.what()));
-		}
-	}
-
-	return true;
+	return downloadFromCore(to);
 }
 
 bool ToolsDownloader::downloadFromCore(const fs::path& to)

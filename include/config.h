@@ -20,6 +20,8 @@
 // 3 - verbose (detailed info about the code)
 #define LOGLEVEL 3
 
+#define ARCH "x86_x64"
+
 // Install - Default option
 #define INSTALL_OPTION "--install" 
 // Uninstall
@@ -37,27 +39,15 @@
 #define FUSION_BASE_URL "http://softwareupdate.vmware.com/cds/vmw-desktop/fusion/"
 
 // Relative URLs and file names to be appended to version/build numbers
-#define FUSION_DEF_TOOLS_LOC "/packages/com.vmware.fusion.tools.darwin.zip.tar"
-#define FUSION_DEF_TOOLS_NAME "com.vmware.fusion.tools.darwin.zip.tar"
-#define FUSION_DEF_TOOLS_ZIP "com.vmware.fusion.tools.darwin.zip"
-
-#define FUSION_DEF_PRE15_TOOLS_LOC "/packages/com.vmware.fusion.tools.darwinPre15.zip.tar"
-#define FUSION_DEF_PRE15_TOOLS_NAME "com.vmware.fusion.tools.darwinPre15.zip.tar"
-#define FUSION_DEF_PRE15_TOOLS_ZIP "com.vmware.fusion.tools.darwinPre15.zip"
-
-#define FUSION_DEF_CORE_LOC "/x86/core/com.vmware.fusion.zip.tar"
+#define FUSION_DEF_CORE_LOC "/universal/core/com.vmware.fusion.zip.tar"
 #define FUSION_DEF_CORE_NAME "com.vmware.fusion.zip.tar"
 #define FUSION_DEF_CORE_NAME_ZIP "com.vmware.fusion.zip"
 
-// Tools locations in the dedicated TARs
-#define FUSION_TAR_TOOLS_ISO "payload/darwin.iso"
-#define FUSION_TAR_PRE15_TOOLS_ISO "payload/darwinPre15.iso"
-
 // Tools locations in the core TAR
-#define FUSION_ZIP_TOOLS_ISO "payload/VMware Fusion.app/Contents/Library/isoimages/darwin.iso"
+#define FUSION_ZIP_TOOLS_ISO "payload/VMware Fusion.app/Contents/Library/isoimages/" ARCH "/darwin.iso"
 #define FUSION_ZIP_TOOLS_NAME "darwin.iso"
 
-#define FUSION_ZIP_PRE15_TOOLS_ISO "payload/VMware Fusion.app/Contents/Library/isoimages/darwinPre15.iso"
+#define FUSION_ZIP_PRE15_TOOLS_ISO "payload/VMware Fusion.app/Contents/Library/isoimages/" ARCH "/darwinPre15.iso"
 #define FUSION_ZIP_PRE15_TOOLS_NAME "darwinPre15.iso"
 
 // Pattern to parse the versions/builds
