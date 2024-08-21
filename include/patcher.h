@@ -14,6 +14,12 @@
 #include "debug.h"
 #include "config.h"
 
+#if defined(__GNUC__)
+#define PACK( __Declaration__ ) __Declaration__ __attribute__((__packed__))
+#elif defined(_MSC_VER)
+#define PACK( __Declaration__ ) __pragma( pack(push, 1) ) __Declaration__ __pragma( pack(pop))
+#endif
+
 class PatchException : public std::runtime_error
 {
 public:
@@ -25,7 +31,8 @@ public:
 	{}
 };
 
-struct LLQQQQLLQQ // couldn't find a better name LOL
+// couldn't find a better name LOL
+PACK(struct LLQQQQLLQQ
 {
 	unsigned long l1;
 	unsigned long l2;
@@ -37,15 +44,16 @@ struct LLQQQQLLQQ // couldn't find a better name LOL
 	unsigned long l4;
 	unsigned long long q5;
 	unsigned long long q6;
-};
+});
 
-struct QQq // it's starting to feel awkward
+// it's starting to feel awkward
+PACK(struct QQq
 {
 	unsigned long long Q1, Q2;
 	long long q3;
-};
+});
 
-struct smc_key_struct
+PACK(struct smc_key_struct
 {
 	char s0[4];
 	unsigned char B1;
@@ -53,7 +61,7 @@ struct smc_key_struct
 	unsigned char B3;
 	unsigned char padding[6];
 	unsigned long long Q4;
-};
+});
 
 class Patcher {
 public:
