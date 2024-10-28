@@ -36,7 +36,7 @@
 #define BACKUP_FOLDER "backup"
 
 // Base URL to parse for the tools
-#define FUSION_BASE_URL "http://softwareupdate.vmware.com/cds/vmw-desktop/fusion/"
+#define FUSION_BASE_URL "https://softwareupdate.vmware.com/cds/vmw-desktop/fusion/"
 
 // Relative URLs and file names to be appended to version/build numbers
 #define FUSION_DEF_CORE_LOC "/universal/core/com.vmware.fusion.zip.tar"
