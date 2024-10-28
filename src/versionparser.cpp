@@ -5,6 +5,8 @@ VersionParser::VersionParser(const std::string& versionhtmltext)
 {
 	std::istringstream iss(htmltext);
 
+	Version lastworkingversion(FUSION_LAST_WORKING_VERSION);
+
 	std::string line;
 	while (std::getline(iss, line))
 	{
@@ -14,7 +16,8 @@ VersionParser::VersionParser(const std::string& versionhtmltext)
 			if (std::regex_match(line, vmatch, pattern))
 			{
 				Version v(vmatch.str(1));
-				versions.emplace_back(v);
+				if (v <= lastworkingversion)
+					versions.emplace_back(v);
 			}
 		}
 		catch (const Version::VersionException & exc)

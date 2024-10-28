@@ -38,6 +38,9 @@
 // Base URL to parse for the tools
 #define FUSION_BASE_URL "http://softwareupdate.vmware.com/cds/vmw-desktop/fusion/"
 
+// Last version with OSX tools
+#define FUSION_LAST_WORKING_VERSION "13.5.2"
+
 // Relative URLs and file names to be appended to version/build numbers
 #define FUSION_DEF_CORE_LOC "/universal/core/com.vmware.fusion.zip.tar"
 #define FUSION_DEF_CORE_NAME "com.vmware.fusion.zip.tar"
