@@ -3,6 +3,7 @@
 
 #include <Windows.h>
 #include <Uxtheme.h>
+#include <string>
 #include "win32/controls/control.h"
 
 class EditBox : public Control 

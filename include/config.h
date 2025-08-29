@@ -35,6 +35,7 @@
 #define TOOLS_DOWNLOAD_FOLDER "tools"
 #define BACKUP_FOLDER "backup"
 
+// DEPRECATED ----
 // Base URL to parse for the tools
 #define FUSION_BASE_URL "http://softwareupdate.vmware.com/cds/vmw-desktop/fusion/"
 
@@ -49,6 +50,13 @@
 
 #define FUSION_ZIP_PRE15_TOOLS_ISO "payload/VMware Fusion.app/Contents/Library/isoimages/" ARCH "/darwinPre15.iso"
 #define FUSION_ZIP_PRE15_TOOLS_NAME "darwinPre15.iso"
+// END DEPRECATED ----
+
+#define TOOLS_DARWIN_URL "https://packages.vmware.com/tools/frozen/darwin/darwin.iso"
+#define TOOLS_DARWIN_PRE15_URL "https://packages.vmware.com/tools/frozen/darwin/darwinPre15.iso"
+
+#define TOOLS_DARWIN_NAME "darwin.iso"
+#define TOOLS_DARWIN_PRE15_NAME "darwinPre15.iso"
 
 // Pattern to parse the versions/builds
 #define VERSION_REGEX_PATTERN "<li><a href=\"[^\"]+\">([^<]+)<\\/a><\\/li>"

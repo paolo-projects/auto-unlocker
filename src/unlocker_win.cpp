@@ -186,38 +186,9 @@ bool downloadTools(fs::path path, std::function<void(double, double, double, dou
 		network.setProgressCallback(progressCallback);
 	}
 
-	fs::path temppath = fs::temp_directory_path(); // extract files in the temp folder first
+	ToolsDownloader downloader(network);
 
-	fs::create_directory(path); // create destination directory if it doesn't exist
-
-	std::string url = FUSION_BASE_URL;
-
-	std::string releasesList;
-
-	releasesList = network.curlGet(url); // get the releases HTML page
-
-	VersionParser versionParser(releasesList); // parse HTML page to version numbers
-
-	if (versionParser.size() == 0)
-	{
-		Logger::error("No Fusion versions found in Download url location.");
-		return false;
-	}
-
-	bool success = false;
-
-	// For each version number retrieve the latest build and check if tools are available
-	for (auto it = versionParser.cbegin(); it != versionParser.cend(); it++)
-	{
-		std::string version = it->getVersionText();
-
-		ToolsDownloader downloader(network, FUSION_BASE_URL, version);
-
-		if (downloader.download(path)) {
-			success = true;
-			break;
-		}
-	}
+	bool success = downloader.download(path);
 
 	if (success) {
 		Logger::info("Tools successfully downloaded!");

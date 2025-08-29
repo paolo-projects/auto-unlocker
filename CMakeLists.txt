@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 project (Unlocker)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/modules)

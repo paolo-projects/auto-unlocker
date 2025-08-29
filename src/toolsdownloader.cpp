@@ -1,23 +1,37 @@
 #include "toolsdownloader.h"
 
-ToolsDownloader::ToolsDownloader(Network& network, const std::string& baseUrl, const std::string& version)
-	: network(network), versionUrl(baseUrl + version + "/"), versionNumber(version)
+ToolsDownloader::ToolsDownloader(Network& network)
+	: network(network)
 {
-	std::string versionHtml = network.curlGet(versionUrl);
-	BuildsParser builds(versionHtml);
-
-	if (builds.size() == 0) {
-		throw ToolsDownloaderException("No builds found for the version number " + versionNumber);
-	}
-
-	buildurl = versionUrl + builds.getLatest(); // use the latest build
 }
 
 bool ToolsDownloader::download(const fs::path& to)
 {
-	return downloadFromCore(to);
+	return downloadDirectly(to);
 }
 
+bool ToolsDownloader::downloadDirectly(const fs::path& to) {
+	std::string darwin_out = (to / TOOLS_DARWIN_NAME).string();
+	std::string darwin_pre15_out = (to / TOOLS_DARWIN_PRE15_NAME).string();
+
+	try
+	{
+		Logger::info(std::string("Downloading ") + TOOLS_DARWIN_NAME + " from " + TOOLS_DARWIN_URL);
+
+		network.curlDownload(TOOLS_DARWIN_URL, darwin_out);
+
+		Logger::info(std::string("Downloading ") + TOOLS_DARWIN_PRE15_NAME + " from " + TOOLS_DARWIN_PRE15_URL);
+
+		network.curlDownload(TOOLS_DARWIN_PRE15_URL, darwin_pre15_out);
+	}
+	catch (const NetworkException& exc) {
+		throw std::runtime_error(std::string(exc.what()));
+	}
+
+	return true;
+}
+
+/*
 bool ToolsDownloader::downloadFromCore(const fs::path& to)
 {
 	fs::path temppath = fs::temp_directory_path();
@@ -72,3 +86,4 @@ bool ToolsDownloader::downloadFromCore(const fs::path& to)
 
 	return true;
 }
+*/

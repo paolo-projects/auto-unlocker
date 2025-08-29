@@ -18,13 +18,13 @@ public:
 class ToolsDownloader
 {
 public:
-	ToolsDownloader(Network& network, const std::string& baseUrl, const std::string& version);
+	ToolsDownloader(Network& network);
 	bool download(const fs::path& to);
 private:
 	Network& network;
-	std::string baseUrl, versionNumber, versionUrl, buildurl;
 
 	bool downloadFromCore(const fs::path& to);
+	bool downloadDirectly(const fs::path& to);
 };
 
 #endif // TOOLSDOWNLOADER_H
