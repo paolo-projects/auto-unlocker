@@ -1,5 +1,5 @@
 # Auto-Unlocker
-A one-click Unlocker for VMWare Player and Workstation.
+A one-click Unlocker for VMware Player and Workstation.
 
 **A C++ port of the [DrDonk Python Unlocker](https://github.com/DrDonk/unlocker)**
 
